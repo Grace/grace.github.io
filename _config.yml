@@ -1,0 +1,15 @@
+title: Grace Christenbery
+tagline: Software engineer — financial systems, rules engines, AI infrastructure
+description: >-
+  Notes on LLM gateways, supply-chain security for agent tooling, and building
+  controls that sit in the path of high-risk traffic.
+url: https://grace.github.io
+github_username: Grace
+
+permalink: /:year/:month/:day/:title/
+markdown: kramdown
+kramdown:
+  syntax_highlighter_opts:
+    disable: true
+
+exclude: [Gemfile, Gemfile.lock, README.md, vendor]

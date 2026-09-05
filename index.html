@@ -1,18 +1,23 @@
 ---
-title: Grace
+layout: default
 ---
+<p>I build rule-driven controls that sit in the path of high-risk traffic —
+fraud logic on a transaction rules engine by day, and
+<a href="https://github.com/Grace/switchboard">an LLM gateway</a> that routes,
+governs and audits model traffic the rest of the time.</p>
 
-<head>
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+<p>Also <a href="https://github.com/Grace/paladin">paladin</a>, which watches the
+files a coding agent obeys, and
+<a href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>,
+which audits an npm package before you install it.</p>
 
-  ga('create', 'UA-68408486-1', 'auto');
-  ga('send', 'pageview');
-
-</script>
-</head>
-
-Coming soon
+<h2>Writing</h2>
+<ul class="posts">
+{% for post in site.posts %}
+  <li>
+    <a class="title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    <span class="date">{{ post.date | date: "%-d %B %Y" }}</span>
+    {% if post.subtitle %}<div class="excerpt">{{ post.subtitle }}</div>{% endif %}
+  </li>
+{% endfor %}
+</ul>
