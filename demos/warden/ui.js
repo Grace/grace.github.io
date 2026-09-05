@@ -1,180 +1,123 @@
-import { project } from "./project.js";
+import { SCENARIOS } from "./scenarios.js";
 
-const CONTRACT = {
-  "contract_version": "1",
-  "ruleset": "shipping-eligibility",
-  "outcomes": {
-    "ALLOW": {
-      "as": "eligible",
-      "audience": "public"
-    },
-    "DENY": {
-      "as": "not_eligible",
-      "audience": "public"
-    },
-    "HOLD": {
-      "as": "under_review",
-      "audience": "partner"
+const $ = (id) => document.getElementById(id);
+const [$trace, $out, $rows, $none, $hint, $who, $blurb, $status] =
+  ["trace","out","rows","none","hint","who","blurb","status"].map($);
+
+let scenario = "withdrawal";
+let mode = "public";
+let ready = false;
+
+// --- what warden held back -------------------------------------------------
+// The projection tells you what crossed. Diffing it against the internal
+// projection tells you what didn't, which is the part worth seeing.
+function heldBack(contract, trace, audience) {
+  if (audience === "internal") return [];
+  const rank = { public: 0, partner: 1, internal: 2 };
+  const out = [];
+  for (const f of trace.firings ?? []) {
+    const rule = contract.rules?.[f.rule];
+    if (!rule) continue;
+    if (rank[rule.audience ?? "internal"] > rank[audience]) {
+      out.push({ rule: f.rule, what: `the whole <code>${rule.reason_code}</code> reason`,
+                 needs: rule.audience ?? "internal", why: "the reason itself is above this tier" });
+      continue;
     }
-  },
-  "rules": {
-    "RL_DEST_OUTSIDE_ZONE": {
-      "audience": "public",
-      "reason_code": "DESTINATION_NOT_SERVED",
-      "message": "We do not ship to this destination yet. Served zones: {served_zones}.",
-      "facts": {
-        "SupportedZones": {
-          "as": "served_zones",
-          "audience": "public"
-        },
-        "DestZoneCode": {
-          "as": "zone",
-          "audience": "internal"
-        }
-      }
-    },
-    "RL_PKG_MASS_OVER_LIMIT": {
-      "audience": "public",
-      "reason_code": "PACKAGE_TOO_HEAVY",
-      "message": "This package is {mass} kg; the limit is {limit} kg.",
-      "facts": {
-        "PkgMassKg": {
-          "as": "mass",
-          "audience": "public"
-        },
-        "MaxMassKg": {
-          "as": "limit",
-          "audience": "public"
-        }
-      }
-    },
-    "RL_CARRIER_MARGIN_FLOOR": {
-      "audience": "internal",
-      "reason_code": "BELOW_MARGIN_FLOOR",
-      "message": "Margin {margin} bps is under the {floor} bps floor.",
-      "facts": {
-        "MarginBps": {
-          "as": "margin",
-          "audience": "internal"
-        },
-        "FloorBps": {
-          "as": "floor",
-          "audience": "internal"
-        }
+    for (const [engine, spec] of Object.entries(rule.facts ?? {})) {
+      if (!(engine in (f.facts ?? {}))) continue;
+      if (rank[spec.audience ?? "internal"] > rank[audience]) {
+        out.push({ rule: f.rule,
+                   what: `<code>${spec.as}</code> = <code>${f.facts[engine]}</code>`,
+                   needs: spec.audience ?? "internal",
+                   why: `the engine calls this <code>${engine}</code>` });
       }
     }
   }
-};
-const BASE_TRACE = {
-  "ruleset": "shipping-eligibility",
-  "version": "2026.09.1",
-  "outcome": "DENY",
-  "firings": [
-    {
-      "rule": "RL_DEST_OUTSIDE_ZONE",
-      "facts": {
-        "DestZoneCode": "Z9",
-        "SupportedZones": "Z1-Z4"
-      }
-    },
-    {
-      "rule": "RL_PKG_MASS_OVER_LIMIT",
-      "facts": {
-        "PkgMassKg": 34.5,
-        "MaxMassKg": 30
-      }
-    },
-    {
-      "rule": "RL_CARRIER_MARGIN_FLOOR",
-      "facts": {
-        "MarginBps": 40,
-        "FloorBps": 150
-      }
-    }
-  ]
-};
-const UNMAPPED = { rule: "RL_SANCTIONS_HIT", facts: { ListId: "OFAC-SDN", MatchScore: 0.94 } };
-
-const HINTS = {
-  public:   "a customer, or anyone who can submit a transaction",
-  partner:  "a carrier or integrator under contract",
-  internal: "your own operators and support staff",
-  __unmapped: "a new rule ships before the contract does",
-};
-const WHO = {
-  public: "— to a public caller", partner: "— to a partner",
-  internal: "— to an internal caller", __unmapped: "— to a public caller",
-};
-
-const $trace = document.getElementById("trace");
-const $out = document.getElementById("out");
-const $rows = document.getElementById("rows");
-const $none = document.getElementById("none");
-const $hint = document.getElementById("hint");
-const $who = document.getElementById("who");
-const buttons = [...document.querySelectorAll(".tiers button")];
-
-let mode = "public";
-
-function traceFor(mode) {
-  const t = structuredClone(BASE_TRACE);
-  if (mode === "__unmapped") t.firings.push(structuredClone(UNMAPPED));
-  return t;
+  if (trace.ruleset) out.push({ rule: "—", what: `<code>ruleset</code> = <code>${trace.ruleset}</code>`, needs: "internal", why: "engine identity" });
+  if (trace.version) out.push({ rule: "—", what: `<code>version</code> = <code>${trace.version}</code>`, needs: "internal", why: "ruleset version" });
+  return out;
 }
 
 function render() {
+  const s = SCENARIOS[scenario];
   const audience = mode === "__unmapped" ? "public" : mode;
+  $hint.textContent = mode === "__unmapped"
+    ? "a new rule ships before the contract does"
+    : s.tiers[audience];
+  $who.textContent = "— to " + (mode === "__unmapped" ? s.tiers.public : s.tiers[audience]);
+  $blurb.innerHTML = s.blurb;
+
+  if (!ready) { $out.textContent = "loading warden…"; return; }
+
   let trace;
-  try {
-    trace = JSON.parse($trace.value);
-  } catch (e) {
+  try { trace = JSON.parse($trace.value); }
+  catch (e) {
     $out.className = "box refused";
     $out.textContent = "the trace is not valid JSON:\n\n" + e.message;
-    $rows.innerHTML = ""; $none.hidden = true;
-    return;
+    $rows.innerHTML = ""; $none.hidden = true; return;
   }
 
-  const r = project(CONTRACT, trace, audience);
-  $hint.textContent = HINTS[mode];
-  $who.textContent = WHO[mode];
+  const r = wardenProject(JSON.stringify(s.contract), JSON.stringify(trace), audience);
 
   if (!r.ok) {
-    // Deny by default: a decision published with a reason missing states a
-    // conclusion whose causes are not the real ones.
     $out.className = "box refused";
     $out.textContent = "refused to publish\n\n" + r.error;
-    $rows.innerHTML = "";
-    $none.hidden = true;
-    return;
+    $rows.innerHTML = ""; $none.hidden = true; return;
   }
-
   $out.className = "box";
-  $out.textContent = JSON.stringify(r.projection, null, 2);
+  $out.textContent = r.decision;
 
-  const rows = r.withheld.map((w) => {
-    const what = w.kind === "reason"
-      ? `the whole <code>${w.code}</code> reason`
-      : w.kind === "meta"
-        ? `<code>${w.as}</code> = <code>${w.value}</code>`
-        : `<code>${w.engineName}</code> → <code>${w.as}</code> = <code>${w.value}</code>`;
-    return `<tr>
-      <td class="mono">${w.rule ?? "—"}</td>
-      <td>${what}</td>
-      <td><span class="tag t-${w.needs}">${w.needs}</span></td>
-      <td>${w.why}</td>
-    </tr>`;
-  });
-  $rows.innerHTML = rows.join("");
-  $none.hidden = rows.length > 0;
+  const held = heldBack(s.contract, trace, audience);
+  $rows.innerHTML = held.map((h) => `<tr>
+      <td class="mono">${h.rule}</td>
+      <td>${h.what}</td>
+      <td><span class="tag t-${h.needs}">${h.needs}</span></td>
+      <td>${h.why}</td>
+    </tr>`).join("");
+  $none.hidden = held.length > 0;
 }
 
-buttons.forEach((b) => b.addEventListener("click", () => {
-  mode = b.dataset.a;
-  buttons.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-  $trace.value = JSON.stringify(traceFor(mode), null, 2);
-  render();
-}));
+function loadTrace() {
+  const s = SCENARIOS[scenario];
+  const t = structuredClone(s.trace);
+  if (mode === "__unmapped") t.firings.push(structuredClone(s.unmapped));
+  $trace.value = JSON.stringify(t, null, 2);
+}
+
+document.querySelectorAll("button[data-scenario]").forEach((b) =>
+  b.addEventListener("click", () => {
+    scenario = b.dataset.scenario;
+    document.querySelectorAll("button[data-scenario]").forEach((x) =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    document.querySelectorAll("button[data-a]").forEach((x) =>
+      x.textContent = x.dataset.a === "__unmapped" ? "fire an unmapped rule"
+        : SCENARIOS[scenario].tiers[x.dataset.a]);
+    loadTrace(); render();
+  }));
+
+document.querySelectorAll("button[data-a]").forEach((b) =>
+  b.addEventListener("click", () => {
+    mode = b.dataset.a;
+    document.querySelectorAll("button[data-a]").forEach((x) =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    loadTrace(); render();
+  }));
+
 $trace.addEventListener("input", render);
 
-$trace.value = JSON.stringify(BASE_TRACE, null, 2);
-render();
+addEventListener("warden-ready", () => {
+  ready = true;
+  $status.textContent = "warden.wasm loaded — this page runs the real Go";
+  render();
+});
+
+// Boot the Go runtime.
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch("./warden.wasm"), go.importObject)
+  .then((r) => go.run(r.instance))
+  .catch((e) => { $out.className = "box refused"; $out.textContent = "could not load warden.wasm:\n\n" + e; });
+
+document.querySelectorAll("button[data-a]").forEach((x) =>
+  x.textContent = x.dataset.a === "__unmapped" ? "fire an unmapped rule"
+    : SCENARIOS[scenario].tiers[x.dataset.a]);
+loadTrace(); render();

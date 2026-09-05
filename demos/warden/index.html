@@ -72,10 +72,17 @@ title: "warden — what a decline is allowed to say"
 </p>
 
 <div class="tiers">
+  <strong style="font-size:.875rem">Scenario</strong>
+  <button data-scenario="withdrawal" aria-pressed="true">new-account withdrawal</button>
+  <button data-scenario="shipping" aria-pressed="false">shipping eligibility</button>
+</div>
+<p id="blurb" class="lede" style="font-size:.9375rem"></p>
+
+<div class="tiers">
   <strong style="font-size:.875rem">Who is asking?</strong>
-  <button data-a="public" aria-pressed="true">public</button>
-  <button data-a="partner" aria-pressed="false">partner</button>
-  <button data-a="internal" aria-pressed="false">internal</button>
+  <button data-a="public" aria-pressed="true"></button>
+  <button data-a="partner" aria-pressed="false"></button>
+  <button data-a="internal" aria-pressed="false"></button>
   <button data-a="__unmapped" aria-pressed="false">fire an unmapped rule</button>
   <span class="hint" id="hint"></span>
 </div>
@@ -100,10 +107,15 @@ title: "warden — what a decline is allowed to say"
 
 <p class="privacy">
   Runs in your browser; the trace is editable, so break it and see what happens.
-  This is a port of <a href="https://github.com/Grace/warden">warden</a>'s
-  projection, pinned against the Go binary's output for all three tiers — the
-  contract is the same <code>testdata/contract.json</code> from the repo.
+  <strong id="status">loading warden…</strong> — this page does not reimplement
+  warden, it compiles it: <code>warden.wasm</code> is the same Go, built with
+  <code>GOOS=js GOARCH=wasm</code>, so the projection here cannot drift from the
+  tool. Nothing is uploaded.
 </p>
+
+<p class="privacy"><em>The withdrawal rule is illustrative — a synthetic variation on a
+pattern common across retail finance, with invented thresholds. It is not any
+institution's real rule.</em></p>
 
 <footer class="site">
   <a href="https://github.com/Grace/warden">github.com/Grace/warden</a> ·
@@ -111,6 +123,7 @@ title: "warden — what a decline is allowed to say"
   <a href="mailto:grace@gracefulco.de">grace@gracefulco.de</a>
 </footer>
 
+<script src="./wasm_exec.js"></script>
 <script type="module" src="./ui.js"></script>
 </body>
 </html>

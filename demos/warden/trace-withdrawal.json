@@ -1,0 +1,28 @@
+{
+  "ruleset": "withdrawal-eligibility",
+  "version": "2026.08.3",
+  "outcome": "DENY",
+  "firings": [
+    {
+      "rule": "RL_NEW_ACCT_EXTERNAL_MISMATCH",
+      "facts": {
+        "AccountAgeDays": 12,
+        "SeasoningThresholdDays": 45,
+        "FundingInstitutionId": "INST-4471",
+        "DestinationInstitutionId": "INST-9082",
+        "FirstAvailableOn": "2026-10-08"
+      }
+    },
+    {
+      "rule": "RL_DEST_UNVERIFIED",
+      "facts": {
+        "DestVerificationState": "PENDING_MICRODEPOSIT",
+        "VerificationAgeHours": 6
+      }
+    },
+    {
+      "rule": "RL_VELOCITY_SCORE",
+      "facts": { "Score": 0.71, "ReviewFloor": 0.65, "ModelVersion": "vs-2026.07" }
+    }
+  ]
+}
