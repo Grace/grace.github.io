@@ -139,4 +139,4 @@ with [the full write-up](https://github.com/Grace/switchboard/blob/main/docs/cos
 including the IAM setup.
 
 If you're running Bedrock for several teams and solving this some other way, I'd
-genuinely like to hear how — **hello@gracefulco.de**.
+genuinely like to hear how — **grace@gracefulco.de**.
