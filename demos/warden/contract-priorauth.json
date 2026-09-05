@@ -1,0 +1,46 @@
+{
+  "contract_version": "1",
+  "ruleset": "prior-authorization",
+
+  "outcomes": {
+    "ALLOW": { "as": "approved",     "audience": "public" },
+    "DENY":  { "as": "not_approved", "audience": "public" },
+    "HOLD":  { "as": "in_review",    "audience": "partner" }
+  },
+
+  "rules": {
+    "RL_CONSERVATIVE_THERAPY_INSUFFICIENT": {
+      "audience": "public",
+      "reason_code": "MORE_CONSERVATIVE_CARE_NEEDED",
+      "message": "This was not approved yet: the plan's criteria ask for a longer trial of conservative treatment first. Your clinician can submit updated records, or you can appeal within {appeal_days} days.",
+      "facts": {
+        "AppealWindowDays": { "as": "appeal_days",      "audience": "public" },
+        "RequiredWeeks":    { "as": "required_weeks",   "audience": "partner" },
+        "DocumentedWeeks":  { "as": "documented_weeks", "audience": "partner" },
+        "CriterionSetId":   { "as": "criterion_set",    "audience": "internal" }
+      }
+    },
+
+    "RL_IMAGING_NOT_ON_FILE": {
+      "audience": "public",
+      "reason_code": "SUPPORTING_IMAGING_MISSING",
+      "message": "The plan does not have recent imaging on file for this request. Your clinician can submit it.",
+      "facts": {
+        "RequiredStudy":       { "as": "study_needed",  "audience": "partner" },
+        "AcceptableAgeMonths": { "as": "within_months", "audience": "partner" },
+        "LastStudyOnFile":     { "as": "on_file",       "audience": "internal" }
+      }
+    },
+
+    "RL_UTILIZATION_OUTLIER": {
+      "audience": "internal",
+      "reason_code": "UTILIZATION_REVIEW",
+      "message": "Ordering provider is at the {percentile} percentile, over the {floor} review floor (model {model}).",
+      "facts": {
+        "ProviderPercentile": { "as": "percentile", "audience": "internal" },
+        "ReviewFloor":        { "as": "floor",      "audience": "internal" },
+        "ModelVersion":       { "as": "model",      "audience": "internal" }
+      }
+    }
+  }
+}

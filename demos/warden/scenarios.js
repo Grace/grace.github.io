@@ -1,7 +1,7 @@
 // Every scenario here is invented, thresholds included. They illustrate one
-// shape -- a decision whose reasons are useful, partly sensitive, and partly
-// an oracle -- across three unrelated industries. None is any company's real
-// ruleset.
+// shape -- a decision whose reasons are partly useful, partly sensitive, and
+// partly an oracle -- across four unrelated industries. None is any company's
+// real ruleset.
 export const SCENARIOS = {
   "payout": {
     "label": "marketplace payout",
@@ -132,9 +132,138 @@ export const SCENARIOS = {
       }
     }
   },
+  "priorauth": {
+    "label": "prior authorization",
+    "blurb": "A procedure request is denied. The plan is <em>obliged</em> to explain and give appeal rights, and equally cannot publish the exact criteria \u2014 a clinician who knows the bar is six weeks can document their way to six weeks. So the patient gets the reason and the appeal window, the ordering clinician gets the specific gap and what would close it, and the criterion set and utilisation model stay with medical policy.",
+    "tiers": {
+      "public": "the patient",
+      "partner": "the ordering clinician",
+      "internal": "medical policy"
+    },
+    "contract": {
+      "contract_version": "1",
+      "ruleset": "prior-authorization",
+      "outcomes": {
+        "ALLOW": {
+          "as": "approved",
+          "audience": "public"
+        },
+        "DENY": {
+          "as": "not_approved",
+          "audience": "public"
+        },
+        "HOLD": {
+          "as": "in_review",
+          "audience": "partner"
+        }
+      },
+      "rules": {
+        "RL_CONSERVATIVE_THERAPY_INSUFFICIENT": {
+          "audience": "public",
+          "reason_code": "MORE_CONSERVATIVE_CARE_NEEDED",
+          "message": "This was not approved yet: the plan's criteria ask for a longer trial of conservative treatment first. Your clinician can submit updated records, or you can appeal within {appeal_days} days.",
+          "facts": {
+            "AppealWindowDays": {
+              "as": "appeal_days",
+              "audience": "public"
+            },
+            "RequiredWeeks": {
+              "as": "required_weeks",
+              "audience": "partner"
+            },
+            "DocumentedWeeks": {
+              "as": "documented_weeks",
+              "audience": "partner"
+            },
+            "CriterionSetId": {
+              "as": "criterion_set",
+              "audience": "internal"
+            }
+          }
+        },
+        "RL_IMAGING_NOT_ON_FILE": {
+          "audience": "public",
+          "reason_code": "SUPPORTING_IMAGING_MISSING",
+          "message": "The plan does not have recent imaging on file for this request. Your clinician can submit it.",
+          "facts": {
+            "RequiredStudy": {
+              "as": "study_needed",
+              "audience": "partner"
+            },
+            "AcceptableAgeMonths": {
+              "as": "within_months",
+              "audience": "partner"
+            },
+            "LastStudyOnFile": {
+              "as": "on_file",
+              "audience": "internal"
+            }
+          }
+        },
+        "RL_UTILIZATION_OUTLIER": {
+          "audience": "internal",
+          "reason_code": "UTILIZATION_REVIEW",
+          "message": "Ordering provider is at the {percentile} percentile, over the {floor} review floor (model {model}).",
+          "facts": {
+            "ProviderPercentile": {
+              "as": "percentile",
+              "audience": "internal"
+            },
+            "ReviewFloor": {
+              "as": "floor",
+              "audience": "internal"
+            },
+            "ModelVersion": {
+              "as": "model",
+              "audience": "internal"
+            }
+          }
+        }
+      }
+    },
+    "trace": {
+      "ruleset": "prior-authorization",
+      "version": "2026.07.2",
+      "outcome": "DENY",
+      "firings": [
+        {
+          "rule": "RL_CONSERVATIVE_THERAPY_INSUFFICIENT",
+          "facts": {
+            "DocumentedWeeks": 3,
+            "RequiredWeeks": 6,
+            "CriterionSetId": "MSK-LUMBAR-2026.2",
+            "AppealWindowDays": 60
+          }
+        },
+        {
+          "rule": "RL_IMAGING_NOT_ON_FILE",
+          "facts": {
+            "RequiredStudy": "MRI lumbar spine without contrast",
+            "LastStudyOnFile": "none",
+            "AcceptableAgeMonths": 12
+          }
+        },
+        {
+          "rule": "RL_UTILIZATION_OUTLIER",
+          "facts": {
+            "ProviderPercentile": 0.97,
+            "ReviewFloor": 0.95,
+            "ModelVersion": "um-2026.05"
+          }
+        }
+      ]
+    },
+    "unmapped": {
+      "rule": "RL_BENEFIT_EXHAUSTED",
+      "facts": {
+        "VisitsUsed": 20,
+        "VisitsAllowed": 20
+      }
+    }
+  },
   "pharmacy": {
     "label": "pharmacy claim",
-    "blurb": "A refill is rejected at the counter. The patient is told only when they can fill it and what to do if they cannot wait; the pharmacist gets what they need to act on it; the plan keeps the refill threshold and the controlled-substance signal, which are the numbers that would be gamed. This is warden's OBD-port analogy in the wild \u2014 a standardised reject code every pharmacy reads, while the plan's rules move underneath it.",
+    "blurb": "A refill is rejected at the counter. The patient is told only when they can fill it and what to do if they cannot wait; the pharmacist gets what they need to act; the plan keeps the refill threshold and the controlled-substance signal. This is warden's OBD-port analogy in the wild \u2014 a standardised reject code every pharmacy reads, while the plan's rules move underneath it.",
     "tiers": {
       "public": "the patient",
       "partner": "the pharmacist",

@@ -1,0 +1,28 @@
+{
+  "ruleset": "prior-authorization",
+  "version": "2026.07.2",
+  "outcome": "DENY",
+  "firings": [
+    {
+      "rule": "RL_CONSERVATIVE_THERAPY_INSUFFICIENT",
+      "facts": {
+        "DocumentedWeeks": 3,
+        "RequiredWeeks": 6,
+        "CriterionSetId": "MSK-LUMBAR-2026.2",
+        "AppealWindowDays": 60
+      }
+    },
+    {
+      "rule": "RL_IMAGING_NOT_ON_FILE",
+      "facts": {
+        "RequiredStudy": "MRI lumbar spine without contrast",
+        "LastStudyOnFile": "none",
+        "AcceptableAgeMonths": 12
+      }
+    },
+    {
+      "rule": "RL_UTILIZATION_OUTLIER",
+      "facts": { "ProviderPercentile": 0.97, "ReviewFloor": 0.95, "ModelVersion": "um-2026.05" }
+    }
+  ]
+}
