@@ -1,15 +1,41 @@
 ---
 layout: default
+description: Grace Christenbery — software engineer in Charlotte, NC. Rule-driven controls in the path of high-risk traffic, LLM gateways, and supply-chain security for agent tooling.
 ---
-<p>I build rule-driven controls that sit in the path of high-risk traffic —
-fraud logic on a transaction rules engine by day, and
-<a href="https://github.com/Grace/switchboard">an LLM gateway</a> that routes,
-governs and audits model traffic the rest of the time.</p>
+<p>I build rule-driven controls that sit in the path of high-risk traffic. By day
+that means fraud logic on a transaction rules engine at a financial services firm,
+and carrying the pager for the money-movement services it guards. The rest of the
+time it means the same idea pointed at model traffic.</p>
 
-<p>Also <a href="https://github.com/Grace/paladin">paladin</a>, which watches the
-files a coding agent obeys, and
-<a href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>,
-which audits an npm package before you install it.</p>
+<h2>Things I've built</h2>
+
+<ul class="posts">
+  <li>
+    <a class="title" href="https://github.com/Grace/switchboard">switchboard</a>
+    <span class="date">Go · LLM gateway</span>
+    <div class="excerpt">One OpenAI-compatible endpoint in front of AWS Bedrock and
+    on-device inference, for environments where the model provider is not your
+    choice to make. Routes by model name, redacts content before it leaves the
+    network, splits the Bedrock bill back out per team, and writes down what was
+    sent.</div>
+  </li>
+  <li>
+    <a class="title" href="https://github.com/Grace/paladin">paladin</a>
+    <span class="date">Go · integrity monitoring</span>
+    <div class="excerpt">Watches the files an AI coding agent obeys — CLAUDE.md,
+    .cursorrules, settings.json, skills — and reports drift, including the
+    zero-width characters, bidi overrides and homoglyphs a reviewer's font will
+    not draw.</div>
+  </li>
+  <li>
+    <a class="title" href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>
+    <span class="date">Node · supply chain</span>
+    <div class="excerpt">Audits an npm package before you install it: install
+    hooks, shipped agent instruction files, hidden characters, and whether it
+    carries a provenance attestation. Published through trusted publishing, with
+    no token in the repo.</div>
+  </li>
+</ul>
 
 <h2>Writing</h2>
 <ul class="posts">
@@ -21,3 +47,15 @@ which audits an npm package before you install it.</p>
   </li>
 {% endfor %}
 </ul>
+
+<h2>Before this</h2>
+<p>Research software at <strong>MIT Lincoln Laboratory</strong>, <strong>MIT
+CSAIL</strong> and <strong>UC Berkeley</strong> — multi-camera capture and
+stereoscopic reconstruction, humanoid robot teleoperation driven by optical hand
+tracking, and RNA-sequencing visualisation. A computer science degree
+concentrated in graphics and data visualisation, which turns out to be a
+reasonable education for thinking about pipelines.</p>
+
+<p>Charlotte, North Carolina ·
+<a href="https://www.linkedin.com/in/glchriste/">LinkedIn</a> ·
+<a href="https://github.com/Grace">GitHub</a></p>
