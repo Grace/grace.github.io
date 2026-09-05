@@ -36,7 +36,7 @@ the metadata you like to an invocation; the Cost and Usage Report groups by
 principal.
 
 **One AWS account per team.** This does work, and if you already have it, use
-it. But account-per-team is an organisational decision with blast radius far
+it. But account-per-team is an organizational decision with blast radius far
 beyond your model spend, and "our gateway can't split a bill" is a poor reason
 to make it.
 
@@ -114,7 +114,7 @@ your sessions are tagged and your bill does not group by them.
 
 ## What I have not verified
 
-The key resolution, team validation, fail-closed behaviour, and the assumed
+The key resolution, team validation, fail-closed behavior, and the assumed
 credentials reaching the backend are unit-tested. What tests cannot cover is
 whether AWS bills the way this expects — that needs a real account and a full
 CUR cycle.
