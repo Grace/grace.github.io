@@ -1,0 +1,114 @@
+---
+layout: null
+title: "See what your agent reads"
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>See what your agent reads — paladin</title>
+<meta name="description" content="Paste a CLAUDE.md, .cursorrules or any instruction file and see the characters your font refuses to draw. Runs entirely in your browser.">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  body { max-width: 52rem; }
+  .lede { color: var(--muted); margin: 0 0 2rem; }
+  .panes { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 46rem) { .panes { grid-template-columns: 1fr; } }
+  .pane h3 { margin: 0 0 .5rem; font-size: .8125rem; text-transform: uppercase;
+             letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  textarea, .out {
+    width: 100%; min-height: 19rem; border: 1px solid var(--rule); border-radius: 8px;
+    padding: .85rem; background: var(--code-bg); color: var(--fg);
+    font: .8125rem/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  textarea { resize: vertical; }
+  .out { margin: 0; overflow-y: auto; max-height: 34rem; }
+
+  /* The reveal: each hidden character becomes something you cannot miss. */
+  .chip {
+    display: inline-block; border-radius: 4px; padding: 0 .3em; margin: 0 .1em;
+    font-size: .68rem; font-weight: 700; letter-spacing: .02em;
+    vertical-align: baseline; white-space: nowrap; color: #12141a;
+  }
+  .k-invisible  { background: #ffd166; }
+  .k-bidi       { background: #ff8fa3; }
+  .k-homoglyph  { background: #8ecae6; }
+  .k-control, .k-format, .k-privateUse { background: #c9b6f5; }
+
+  .verdict { margin: 1.5rem 0 .5rem; font-size: 1.0625rem; font-weight: 650; }
+  .verdict.clean { color: #2d7a4f; }
+  @media (prefers-color-scheme: dark) { .verdict.clean { color: #6ecf9a; } }
+  .verdict.dirty { color: #b3402f; }
+  @media (prefers-color-scheme: dark) { .verdict.dirty { color: #ff9a86; } }
+
+  table.findings { font-size: .8125rem; margin-top: .5rem; }
+  table.findings td { padding: .3rem .8rem .3rem 0; vertical-align: top; }
+  table.findings td.pos { color: var(--muted); font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+  table.findings td.cp  { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+
+  .samples { margin: 0 0 .75rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+  button.sample {
+    font: inherit; font-size: .8125rem; cursor: pointer; padding: .3rem .7rem;
+    border: 1px solid var(--rule); border-radius: 999px;
+    background: transparent; color: var(--link);
+  }
+  button.sample:hover { border-color: var(--link); }
+  .privacy { color: var(--muted); font-size: .875rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="name" href="../">Grace Christenbery</a>
+  <div class="tagline">Software engineer — ledgers, AI infrastructure</div>
+</header>
+
+<h1>See what your agent reads</h1>
+<p class="lede">
+  <code>CLAUDE.md</code>, <code>.cursorrules</code>, <code>AGENTS.md</code> and
+  <code>settings.json</code> are instructions your coding agent obeys every
+  session. Your font will not draw a zero-width space, a right-to-left override,
+  or a Cyrillic <code>а</code> wearing a Latin <code>a</code>'s face. The agent
+  reads all three.
+</p>
+
+<div class="samples">
+  <button class="sample" data-s="poisoned">a poisoned CLAUDE.md</button>
+  <button class="sample" data-s="homoglyph">a homoglyph rule</button>
+  <button class="sample" data-s="trojan">Trojan Source</button>
+  <button class="sample" data-s="clean">an ordinary file</button>
+</div>
+
+<div class="panes">
+  <div class="pane">
+    <h3>Paste anything</h3>
+    <textarea id="in" spellcheck="false" aria-label="Text to scan"></textarea>
+  </div>
+  <div class="pane">
+    <h3>What is actually there</h3>
+    <pre class="out" id="out" aria-live="polite"></pre>
+  </div>
+</div>
+
+<div id="verdict" class="verdict"></div>
+<table class="findings"><tbody id="rows"></tbody></table>
+
+<p class="privacy">
+  Nothing leaves your browser — no upload, no network request, no analytics. The
+  scan is the same logic as
+  <a href="https://github.com/Grace/paladin">paladin</a>, which does this across a
+  whole config directory and reports drift against a signed baseline.
+  <a href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>
+  does it for npm packages before you install them.
+</p>
+
+<footer class="site">
+  <a href="https://github.com/Grace">github.com/Grace</a> ·
+  <a href="../">grace.github.io</a> ·
+  <a href="mailto:grace@gracefulco.de">grace@gracefulco.de</a>
+</footer>
+
+<script type="module" src="./ui.js"></script>
+</body>
+</html>
