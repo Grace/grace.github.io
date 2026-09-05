@@ -1,0 +1,46 @@
+{
+  "contract_version": "1",
+  "ruleset": "payout-eligibility",
+
+  "outcomes": {
+    "ALLOW": { "as": "available",         "audience": "public" },
+    "DENY":  { "as": "not_available_yet", "audience": "public" },
+    "HOLD":  { "as": "under_review",      "audience": "partner" }
+  },
+
+  "rules": {
+    "RL_NEW_SELLER_PAYOUT_MISMATCH": {
+      "audience": "public",
+      "reason_code": "PAYOUT_ACCOUNT_NOT_YET_ELIGIBLE",
+      "message": "Payouts to an account other than the one your sales settle into are not available on a new shop yet. This unlocks on {available_on}. Until then you can be paid out to your settlement account at any time.",
+      "facts": {
+        "FirstAvailableOn":         { "as": "available_on",   "audience": "public" },
+        "SellerAgeDays":            { "as": "shop_age_days",  "audience": "partner" },
+        "SeasoningThresholdDays":   { "as": "threshold_days", "audience": "internal" },
+        "SettlementAccountId":      { "as": "settles_to",     "audience": "internal" },
+        "RequestedPayoutAccountId": { "as": "requested_to",   "audience": "internal" }
+      }
+    },
+
+    "RL_PAYOUT_ACCT_UNVERIFIED": {
+      "audience": "public",
+      "reason_code": "PAYOUT_ACCOUNT_NOT_VERIFIED",
+      "message": "The payout account has not finished verification. Confirm the two small deposits we sent to complete it.",
+      "facts": {
+        "VerificationAgeHours": { "as": "hours_since_started", "audience": "partner" },
+        "VerificationState":    { "as": "verification_state",  "audience": "internal" }
+      }
+    },
+
+    "RL_CHARGEBACK_RISK_SCORE": {
+      "audience": "internal",
+      "reason_code": "CHARGEBACK_REVIEW",
+      "message": "Chargeback score {score} is over the {floor} review floor (model {model}).",
+      "facts": {
+        "Score":        { "as": "score", "audience": "internal" },
+        "ReviewFloor":  { "as": "floor", "audience": "internal" },
+        "ModelVersion": { "as": "model", "audience": "internal" }
+      }
+    }
+  }
+}

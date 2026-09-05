@@ -4,7 +4,7 @@ const $ = (id) => document.getElementById(id);
 const [$trace, $out, $rows, $none, $hint, $who, $blurb, $status] =
   ["trace","out","rows","none","hint","who","blurb","status"].map($);
 
-let scenario = "withdrawal";
+let scenario = "payout";
 let mode = "public";
 let ready = false;
 

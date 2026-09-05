@@ -1,18 +1,18 @@
-// Illustrative only. The withdrawal rule is a synthetic variation on a
-// common pattern in retail finance; it is not any institution's real rule,
-// and the thresholds are invented.
+// Both scenarios are invented, including every threshold. They illustrate a
+// pattern -- new account, destination mismatch, a risk score with a floor --
+// that is common across marketplaces and payments generally.
 export const SCENARIOS = {
-  "withdrawal": {
-    "label": "new-account withdrawal",
-    "blurb": "A new account tries to withdraw to a bank other than the one the money came from. The customer needs to know <em>why</em> and <em>what to do</em>; the associate helping them needs a little context; nobody outside needs the seasoning threshold or the velocity score, because those are the two numbers a fraudster would binary-search for.",
+  "payout": {
+    "label": "marketplace seller payout",
+    "blurb": "A new shop asks to be paid out to an account other than the one its sales settle into. The seller needs to know <em>why</em> and <em>what to do about it</em>; a support agent needs a little context to have that conversation; nobody outside needs the seasoning threshold or the chargeback floor, because those are precisely the two numbers someone would binary-search for.",
     "tiers": {
-      "public": "the customer",
-      "partner": "an associate helping them",
+      "public": "the seller",
+      "partner": "a support agent",
       "internal": "the risk team"
     },
     "contract": {
       "contract_version": "1",
-      "ruleset": "withdrawal-eligibility",
+      "ruleset": "payout-eligibility",
       "outcomes": {
         "ALLOW": {
           "as": "available",
@@ -28,52 +28,52 @@ export const SCENARIOS = {
         }
       },
       "rules": {
-        "RL_NEW_ACCT_EXTERNAL_MISMATCH": {
+        "RL_NEW_SELLER_PAYOUT_MISMATCH": {
           "audience": "public",
-          "reason_code": "EXTERNAL_TRANSFER_NOT_YET_AVAILABLE",
-          "message": "Transfers to an account at a different institution are not available on this account yet. This will become available on {available_on}. You can withdraw to the account the funds came from at any time.",
+          "reason_code": "PAYOUT_ACCOUNT_NOT_YET_ELIGIBLE",
+          "message": "Payouts to an account other than the one your sales settle into are not available on a new shop yet. This unlocks on {available_on}. Until then you can be paid out to your settlement account at any time.",
           "facts": {
             "FirstAvailableOn": {
               "as": "available_on",
               "audience": "public"
             },
-            "AccountAgeDays": {
-              "as": "account_age_days",
+            "SellerAgeDays": {
+              "as": "shop_age_days",
               "audience": "partner"
             },
             "SeasoningThresholdDays": {
               "as": "threshold_days",
               "audience": "internal"
             },
-            "FundingInstitutionId": {
-              "as": "funding_inst",
+            "SettlementAccountId": {
+              "as": "settles_to",
               "audience": "internal"
             },
-            "DestinationInstitutionId": {
-              "as": "dest_inst",
+            "RequestedPayoutAccountId": {
+              "as": "requested_to",
               "audience": "internal"
             }
           }
         },
-        "RL_DEST_UNVERIFIED": {
+        "RL_PAYOUT_ACCT_UNVERIFIED": {
           "audience": "public",
-          "reason_code": "DESTINATION_NOT_VERIFIED",
-          "message": "The destination account has not finished verification. Confirm the two small deposits we sent to complete it.",
+          "reason_code": "PAYOUT_ACCOUNT_NOT_VERIFIED",
+          "message": "The payout account has not finished verification. Confirm the two small deposits we sent to complete it.",
           "facts": {
             "VerificationAgeHours": {
               "as": "hours_since_started",
               "audience": "partner"
             },
-            "DestVerificationState": {
+            "VerificationState": {
               "as": "verification_state",
               "audience": "internal"
             }
           }
         },
-        "RL_VELOCITY_SCORE": {
+        "RL_CHARGEBACK_RISK_SCORE": {
           "audience": "internal",
-          "reason_code": "VELOCITY_REVIEW",
-          "message": "Velocity score {score} is over the {floor} review floor (model {model}).",
+          "reason_code": "CHARGEBACK_REVIEW",
+          "message": "Chargeback score {score} is over the {floor} review floor (model {model}).",
           "facts": {
             "Score": {
               "as": "score",
@@ -92,33 +92,33 @@ export const SCENARIOS = {
       }
     },
     "trace": {
-      "ruleset": "withdrawal-eligibility",
+      "ruleset": "payout-eligibility",
       "version": "2026.08.3",
       "outcome": "DENY",
       "firings": [
         {
-          "rule": "RL_NEW_ACCT_EXTERNAL_MISMATCH",
+          "rule": "RL_NEW_SELLER_PAYOUT_MISMATCH",
           "facts": {
-            "AccountAgeDays": 12,
+            "SellerAgeDays": 12,
             "SeasoningThresholdDays": 45,
-            "FundingInstitutionId": "INST-4471",
-            "DestinationInstitutionId": "INST-9082",
+            "SettlementAccountId": "ACCT-4471",
+            "RequestedPayoutAccountId": "ACCT-9082",
             "FirstAvailableOn": "2026-10-08"
           }
         },
         {
-          "rule": "RL_DEST_UNVERIFIED",
+          "rule": "RL_PAYOUT_ACCT_UNVERIFIED",
           "facts": {
-            "DestVerificationState": "PENDING_MICRODEPOSIT",
+            "VerificationState": "PENDING_MICRODEPOSIT",
             "VerificationAgeHours": 6
           }
         },
         {
-          "rule": "RL_VELOCITY_SCORE",
+          "rule": "RL_CHARGEBACK_RISK_SCORE",
           "facts": {
             "Score": 0.71,
             "ReviewFloor": 0.65,
-            "ModelVersion": "vs-2026.07"
+            "ModelVersion": "cb-2026.07"
           }
         }
       ]

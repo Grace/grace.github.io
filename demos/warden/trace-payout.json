@@ -1,0 +1,28 @@
+{
+  "ruleset": "payout-eligibility",
+  "version": "2026.08.3",
+  "outcome": "DENY",
+  "firings": [
+    {
+      "rule": "RL_NEW_SELLER_PAYOUT_MISMATCH",
+      "facts": {
+        "SellerAgeDays": 12,
+        "SeasoningThresholdDays": 45,
+        "SettlementAccountId": "ACCT-4471",
+        "RequestedPayoutAccountId": "ACCT-9082",
+        "FirstAvailableOn": "2026-10-08"
+      }
+    },
+    {
+      "rule": "RL_PAYOUT_ACCT_UNVERIFIED",
+      "facts": {
+        "VerificationState": "PENDING_MICRODEPOSIT",
+        "VerificationAgeHours": 6
+      }
+    },
+    {
+      "rule": "RL_CHARGEBACK_RISK_SCORE",
+      "facts": { "Score": 0.71, "ReviewFloor": 0.65, "ModelVersion": "cb-2026.07" }
+    }
+  ]
+}
