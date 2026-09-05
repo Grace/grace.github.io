@@ -1,0 +1,116 @@
+---
+layout: null
+title: "warden — what a decline is allowed to say"
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>warden — what a decline is allowed to say</title>
+<meta name="description" content="A rules engine answers in its own vocabulary. Watch what crosses the boundary to a public caller, a partner, and an internal one — and what is held back.">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  body { max-width: 58rem; }
+  .lede { color: var(--muted); margin: 0 0 1.5rem; }
+  .tiers { display: flex; gap: .5rem; margin: 0 0 1.25rem; flex-wrap: wrap; align-items: center; }
+  .tiers button {
+    font: inherit; font-size: .875rem; cursor: pointer; padding: .35rem .9rem;
+    border: 1px solid var(--rule); border-radius: 999px;
+    background: transparent; color: var(--fg);
+  }
+  .tiers button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .tiers .hint { color: var(--muted); font-size: .8125rem; margin-left: .35rem; }
+
+  .panes { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; align-items: start; }
+  @media (max-width: 52rem) { .panes { grid-template-columns: 1fr; } }
+  .pane h3 { margin: 0 0 .4rem; font-size: .75rem; text-transform: uppercase;
+             letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .pane h3 span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  pre.box, textarea.box {
+    margin: 0; width: 100%; border: 1px solid var(--rule); border-radius: 8px;
+    padding: .8rem; background: var(--code-bg); color: var(--fg);
+    font: .78125rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre; overflow-x: auto; min-height: 21rem;
+  }
+  textarea.box { resize: vertical; white-space: pre; }
+  pre.box.refused { border-color: #b3402f; color: #b3402f; white-space: pre-wrap; }
+  @media (prefers-color-scheme: dark) { pre.box.refused { border-color: #ff9a86; color: #ff9a86; } }
+
+  .withheld { margin-top: 1.5rem; }
+  .withheld h2 { margin-bottom: .4rem; }
+  .withheld p.sub { color: var(--muted); font-size: .875rem; margin: 0 0 .6rem; }
+  table.w { width: 100%; font-size: .8125rem; border-collapse: collapse; }
+  table.w td { padding: .35rem .8rem .35rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.w td.mono { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag { display: inline-block; border-radius: 4px; padding: 0 .35em; font-size: .6875rem;
+         font-weight: 700; color: #12141a; }
+  .t-partner { background: #ffd166; }
+  .t-internal { background: #ff8fa3; }
+  .none { color: var(--muted); font-size: .875rem; }
+  .privacy { color: var(--muted); font-size: .875rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="name" href="/">Grace Christenbery</a>
+  <div class="tagline">Software engineer — ledgers, AI infrastructure</div>
+</header>
+
+<p style="color:var(--muted);font-size:.875rem;margin:0 0 .35rem">
+  <a href="/demos/">demos</a> / warden
+</p>
+<h1>What a decline is allowed to say</h1>
+<p class="lede">
+  A rules engine answers in its own vocabulary: rule ids, working-memory facts,
+  the margin floor that priced the decision. Hand that to whoever asked and
+  consumers couple to names you can never rename — and an attacker who can submit
+  transactions and read why they failed is running an
+  <strong>oracle attack</strong>, binary-searching your thresholds one decline at
+  a time. Tell them <code>VELOCITY_LIMIT</code> and they learn where the edge is.
+  Tell them <code>not_eligible</code> and they learn nothing.
+</p>
+
+<div class="tiers">
+  <strong style="font-size:.875rem">Who is asking?</strong>
+  <button data-a="public" aria-pressed="true">public</button>
+  <button data-a="partner" aria-pressed="false">partner</button>
+  <button data-a="internal" aria-pressed="false">internal</button>
+  <button data-a="__unmapped" aria-pressed="false">fire an unmapped rule</button>
+  <span class="hint" id="hint"></span>
+</div>
+
+<div class="panes">
+  <div class="pane">
+    <h3>The engine's trace <span>— what actually fired</span></h3>
+    <textarea class="box" id="trace" spellcheck="false" aria-label="Rules engine trace"></textarea>
+  </div>
+  <div class="pane">
+    <h3>What crosses the boundary <span id="who">— to a public caller</span></h3>
+    <pre class="box" id="out"></pre>
+  </div>
+</div>
+
+<section class="withheld">
+  <h2>Held back</h2>
+  <p class="sub">Everything the engine said that this audience does not get, and why.</p>
+  <table class="w"><tbody id="rows"></tbody></table>
+  <p class="none" id="none" hidden>Nothing — this audience sees the whole trace.</p>
+</section>
+
+<p class="privacy">
+  Runs in your browser; the trace is editable, so break it and see what happens.
+  This is a port of <a href="https://github.com/Grace/warden">warden</a>'s
+  projection, pinned against the Go binary's output for all three tiers — the
+  contract is the same <code>testdata/contract.json</code> from the repo.
+</p>
+
+<footer class="site">
+  <a href="https://github.com/Grace/warden">github.com/Grace/warden</a> ·
+  <a href="/demos/">other demos</a> ·
+  <a href="mailto:grace@gracefulco.de">grace@gracefulco.de</a>
+</footer>
+
+<script type="module" src="./ui.js"></script>
+</body>
+</html>
