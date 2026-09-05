@@ -98,9 +98,11 @@ title: "paladin — see what your agent reads"
 <table class="findings"><tbody id="rows"></tbody></table>
 
 <p class="privacy">
-  Nothing leaves your browser — no upload, no network request, no analytics. The
-  scan is the same logic as
-  <a href="https://github.com/Grace/paladin">paladin</a>, which does this across a
+  <strong id="status">loading paladin…</strong> — this page does not reimplement
+  paladin, it compiles it: <code>paladin.wasm</code> is the same Go, so the scan
+  here cannot disagree with the tool. Nothing leaves your browser — no upload, no
+  network request, no analytics.
+  <a href="https://github.com/Grace/paladin">paladin</a> itself does this across a
   whole config directory and reports drift against a signed baseline.
   <a href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>
   does it for npm packages before you install them.
@@ -112,6 +114,7 @@ title: "paladin — see what your agent reads"
   <a href="mailto:grace@gracefulco.de">grace@gracefulco.de</a>
 </footer>
 
-<script type="module" src="./ui.js"></script>
+<script src="./wasm_exec.js"></script>
+<script src="./ui.js"></script>
 </body>
 </html>
