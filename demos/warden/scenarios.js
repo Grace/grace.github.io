@@ -1,10 +1,11 @@
-// Both scenarios are invented, including every threshold. They illustrate a
-// pattern -- new account, destination mismatch, a risk score with a floor --
-// that is common across marketplaces and payments generally.
+// Every scenario here is invented, thresholds included. They illustrate one
+// shape -- a decision whose reasons are useful, partly sensitive, and partly
+// an oracle -- across three unrelated industries. None is any company's real
+// ruleset.
 export const SCENARIOS = {
   "payout": {
-    "label": "marketplace seller payout",
-    "blurb": "A new shop asks to be paid out to an account other than the one its sales settle into. The seller needs to know <em>why</em> and <em>what to do about it</em>; a support agent needs a little context to have that conversation; nobody outside needs the seasoning threshold or the chargeback floor, because those are precisely the two numbers someone would binary-search for.",
+    "label": "marketplace payout",
+    "blurb": "A new shop asks to be paid out to an account other than the one its sales settle into. The seller needs the <em>why</em> and the <em>fix</em>; a support agent needs context to have that conversation; the seasoning threshold and the chargeback floor are exactly what someone would binary-search for, so they stay inside.",
     "tiers": {
       "public": "the seller",
       "partner": "a support agent",
@@ -128,6 +129,140 @@ export const SCENARIOS = {
       "facts": {
         "ListId": "SDN",
         "MatchScore": 0.94
+      }
+    }
+  },
+  "pharmacy": {
+    "label": "pharmacy claim",
+    "blurb": "A refill is rejected at the counter. The patient is told only when they can fill it and what to do if they cannot wait; the pharmacist gets what they need to act on it; the plan keeps the refill threshold and the controlled-substance signal, which are the numbers that would be gamed. This is warden's OBD-port analogy in the wild \u2014 a standardised reject code every pharmacy reads, while the plan's rules move underneath it.",
+    "tiers": {
+      "public": "the patient",
+      "partner": "the pharmacist",
+      "internal": "the plan"
+    },
+    "contract": {
+      "contract_version": "1",
+      "ruleset": "pharmacy-claim",
+      "outcomes": {
+        "ALLOW": {
+          "as": "paid",
+          "audience": "public"
+        },
+        "DENY": {
+          "as": "not_covered",
+          "audience": "public"
+        },
+        "HOLD": {
+          "as": "in_review",
+          "audience": "partner"
+        }
+      },
+      "rules": {
+        "RL_REFILL_TOO_SOON": {
+          "audience": "public",
+          "reason_code": "REFILL_TOO_SOON",
+          "message": "This refill is earlier than the plan allows. It can be filled on {next_fill_on}. If you need it sooner \u2014 travel, a lost supply \u2014 your pharmacist can request an override.",
+          "facts": {
+            "NextFillOn": {
+              "as": "next_fill_on",
+              "audience": "public"
+            },
+            "DaysSupplyRemaining": {
+              "as": "days_remaining",
+              "audience": "partner"
+            },
+            "RefillThresholdPct": {
+              "as": "threshold_pct",
+              "audience": "internal"
+            },
+            "LastFillOn": {
+              "as": "last_fill_on",
+              "audience": "internal"
+            }
+          }
+        },
+        "RL_QUANTITY_OVER_PLAN_LIMIT": {
+          "audience": "public",
+          "reason_code": "QUANTITY_LIMIT_EXCEEDED",
+          "message": "The plan covers a smaller quantity than was requested. Your pharmacist can dispense the covered amount, or your prescriber can request an exception.",
+          "facts": {
+            "PlanLimitQty": {
+              "as": "covered_qty",
+              "audience": "partner"
+            },
+            "RequestedQty": {
+              "as": "requested_qty",
+              "audience": "partner"
+            },
+            "LimitPeriodDays": {
+              "as": "per_days",
+              "audience": "partner"
+            },
+            "OverrideCode": {
+              "as": "override_code",
+              "audience": "internal"
+            }
+          }
+        },
+        "RL_CONTROLLED_UTILIZATION_SIGNAL": {
+          "audience": "internal",
+          "reason_code": "UTILIZATION_REVIEW",
+          "message": "{prescribers} prescribers in 90 days, over the {floor} review floor (model {model}).",
+          "facts": {
+            "PrescriberCount90d": {
+              "as": "prescribers",
+              "audience": "internal"
+            },
+            "ReviewFloor": {
+              "as": "floor",
+              "audience": "internal"
+            },
+            "ModelVersion": {
+              "as": "model",
+              "audience": "internal"
+            }
+          }
+        }
+      }
+    },
+    "trace": {
+      "ruleset": "pharmacy-claim",
+      "version": "2026.07.2",
+      "outcome": "DENY",
+      "firings": [
+        {
+          "rule": "RL_REFILL_TOO_SOON",
+          "facts": {
+            "DaysSupplyRemaining": 9,
+            "RefillThresholdPct": 75,
+            "NextFillOn": "2026-09-14",
+            "LastFillOn": "2026-08-21"
+          }
+        },
+        {
+          "rule": "RL_QUANTITY_OVER_PLAN_LIMIT",
+          "facts": {
+            "RequestedQty": 90,
+            "PlanLimitQty": 60,
+            "LimitPeriodDays": 30,
+            "OverrideCode": "PA-QL-2026.4"
+          }
+        },
+        {
+          "rule": "RL_CONTROLLED_UTILIZATION_SIGNAL",
+          "facts": {
+            "PrescriberCount90d": 4,
+            "ReviewFloor": 3,
+            "ModelVersion": "cs-2026.05"
+          }
+        }
+      ]
+    },
+    "unmapped": {
+      "rule": "RL_DUR_INTERACTION",
+      "facts": {
+        "Severity": "MAJOR",
+        "InteractingNdc": "00000-0000-00"
       }
     }
   },

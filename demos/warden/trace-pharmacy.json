@@ -1,0 +1,29 @@
+{
+  "ruleset": "pharmacy-claim",
+  "version": "2026.07.2",
+  "outcome": "DENY",
+  "firings": [
+    {
+      "rule": "RL_REFILL_TOO_SOON",
+      "facts": {
+        "DaysSupplyRemaining": 9,
+        "RefillThresholdPct": 75,
+        "NextFillOn": "2026-09-14",
+        "LastFillOn": "2026-08-21"
+      }
+    },
+    {
+      "rule": "RL_QUANTITY_OVER_PLAN_LIMIT",
+      "facts": {
+        "RequestedQty": 90,
+        "PlanLimitQty": 60,
+        "LimitPeriodDays": 30,
+        "OverrideCode": "PA-QL-2026.4"
+      }
+    },
+    {
+      "rule": "RL_CONTROLLED_UTILIZATION_SIGNAL",
+      "facts": { "PrescriberCount90d": 4, "ReviewFloor": 3, "ModelVersion": "cs-2026.05" }
+    }
+  ]
+}
