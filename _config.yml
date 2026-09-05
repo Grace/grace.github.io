@@ -4,6 +4,9 @@ description: >-
   Notes on LLM gateways, supply-chain security for agent tooling, and building
   controls that sit in the path of high-risk traffic.
 url: https://grace.github.io
+# Without this Jekyll normalises post dates to UTC, so an evening post
+# published on the 4th appears as the 5th.
+timezone: America/New_York
 github_username: Grace
 
 permalink: /:year/:month/:day/:title/
