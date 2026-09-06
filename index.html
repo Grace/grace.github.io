@@ -44,6 +44,19 @@ ones finance has been solving for a century.</p>
     vocabulary.</div>
   </li>
   <li>
+    <a class="title" href="https://github.com/Grace/inquest">inquest</a>
+    <span class="date">Go · distributed tracing</span>
+    <div class="excerpt">Works out which service actually caused a slowdown, by
+    ranking on self time — a span's duration minus the wall-clock its children
+    cover — rather than on duration. Everything on the path of a slow call gets
+    slower by about the same amount, so duration makes every service on the path
+    look guilty, and only the shape of the trace separates the cause from the
+    things waiting on it. Scored against labeled failures in the OpenTelemetry
+    Demo, where it names the wrong service more often than the right one; the
+    README publishes that number and the flaw in the harness that produced
+    it.</div>
+  </li>
+  <li>
     <a class="title" href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>
     <span class="date">Node · supply chain</span>
     <div class="excerpt">Audits an npm package before you install it: install

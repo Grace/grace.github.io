@@ -58,21 +58,21 @@ ranked.
 The top of the list:
 
 ```
-ad · oteldemo.AdService/GetAds     self 6.96ms → 1.89s     z 410
+ad · oteldemo.AdService/GetAds     self 4.22ms → 2.10s     z 742
 ```
 
-The runner-up scored **0.5**. Not a close call.
+The runner-up scored **1.7**. Not a close call.
 
 And the span that makes the point is the one that didn't rank. The frontend's
 client span for that same call — the outbound side of the identical request —
 moved like this:
 
 ```
-duration   +1885.6ms
-self time     +3.6ms
+duration   +2125.1ms
+self time      +9.0ms
 ```
 
-Its duration moved five hundred times more than its own work did. On a duration
+Its duration moved roughly two hundred times more than its own work did. On a duration
 ranking it's the second-worst thing in the system. On self time it's a service
 sitting patiently on a socket, which is what it actually was.
 
@@ -102,33 +102,70 @@ its duration shift didn't cause it, however many milliseconds that fifth
 happens to be.
 
 The fix didn't change the answer — the ad service ranked first either way, at
-z=410 against 0.5. It changed a label on the row underneath, which is the row
+z=742 against 1.7. It changed a label on the row underneath, which is the row
 someone reads when the top one doesn't look right. The demo's actual numbers are
 the regression test now.
 
-## The part I can't tell you yet
+## The number, and what's wrong with it
 
-One case is an anecdote. I don't have an accuracy number, and until I do, nothing
-here is a claim about how well this works — only about what it measures and why
-that measurement is the right one.
+Four labeled failures from the demo, five minutes of baseline and five minutes
+per incident, scored two ways:
 
-Getting that number is mostly mechanical: the demo ships fourteen feature flags
-that inject specific failures, so ground truth comes from whoever flipped the
-flag rather than from the tool. What it isn't is quick, and it comes with its own
-traps. `intlShippingSlowdown` looked like the ideal first case — latency injected
-straight into one service — and is unusable, because it only delays non-US
-addresses and exactly one of the demo's nine load-generator personas is Canadian.
-About a tenth of an already-rare operation, which is both below any sample floor
-and a tail effect rather than a shift in typical behaviour.
+| ranking | top-1 | top-3 | wrong | declined |
+| --- | --- | --- | --- | --- |
+| deviation (robust-z) | 25% | 25% | **50%** | 25% |
+| effect size | 25% | 50% | 25% | 25% |
 
-When the number exists it'll be published whatever it says, with the demo commit,
-the flags, the window length, and the case count. A localizer that's right 60% of
-the time and quiet the rest is usable at 3am. One that's right 60% of the time and
-confidently wrong the rest is not — and both of them score 60% if you only count
-hits. So the scoring keeps *wrong* and *declined* in separate columns, and a
-service that only ever appeared as "waiting on something below it" counts as a
-miss, never a hit. Anything else is marking your own homework on the one
-distinction the tool claims to make.
+Four cases is not a benchmark. It is enough to say the tool names the wrong
+service more often than the right one, and that's the number to carry rather
+than the one case it nailed.
+
+The second row is there because measuring this exposed a mistake in the ranking
+itself. Robust-z asks how far a shift falls outside an operation's own history —
+that's a significance test — and I was reading it as importance. Across tiers
+those come apart badly: a browser page-load timing moving 30% of a 2.4-second
+baseline outscores a gRPC handler that tripled 3.5ms, and only one of those is a
+cause. Scoring the shift as a fraction of the operation's own baseline instead —
+an effect size — halves the wrong rate. Everything with no instrumented children
+made it worse, because a span with no children has self time equal to its
+duration *by construction*, so it can never be called a waiter and always looks
+like its own cause. Browser and load-generator spans are almost all leaves.
+
+The bigger finding isn't in the tool. I captured one baseline at the start of
+the run and compared it against windows up to 32 minutes later, and the ad
+service ends the run about 2.5× slower than it began with nothing injected into
+it:
+
+```
+baseline                     GetAds p50   4.33ms
+productCatalogFailure        GetAds p50  11.19ms   ← ad untouched
+recommendationCacheFailure   GetAds p50  10.42ms   ← ad untouched
+```
+
+That drift gets attributed to whichever flag happened to be on. It's why the ad
+service tops the ranking in a window about a recommendation-service cache leak —
+a false positive my harness manufactured, not the ranking. So 25% is a floor on
+the error rate, not an estimate of it, and the fix is interleaving a fresh
+baseline between injections instead of reusing one.
+
+Three other things the harness got wrong before the tool got a chance to.
+`cartFailure` only fires inside `EmptyCart`, which sees about three calls a
+minute — 14 samples against a floor of 20, so it can't clear the bar in five
+minutes and it's out of the set. `intlShippingSlowdown` looked like the ideal
+first case and is unusable: it only delays non-US addresses, and exactly one of
+the demo's nine load-generator personas is Canadian. And `productCatalogFailure`
+couldn't fire at all for two runs, because the demo ships it with a targeting
+rule whose branches are *both* `"off"` — and a targeting rule overrides the
+default variant, so flipping the default left the flag disabled while appearing
+to work. It scored as a decline. That was me, not the tool, and it's why every
+case now verifies its own injection and writes the evidence next to the result.
+
+The scoring keeps *wrong* and *declined* in separate columns throughout. A
+localizer that's right 60% of the time and quiet the rest is usable at 3am; one
+that's right 60% and confidently wrong the rest is not, and both score 60% if
+you only count hits. A service that only ever appeared as "waiting on something
+below it" counts as a miss, never a hit — anything else is marking your own
+homework on the one distinction the tool claims to make.
 
 The code is at [github.com/Grace/inquest](https://github.com/Grace/inquest).
 Pre-alpha, and the README says so.
