@@ -82,3 +82,31 @@ footer.site {
   color: var(--muted); font-size: 0.875rem;
 }
 footer.site a { color: var(--muted); }
+
+/* ---- figures ---------------------------------------------------------- */
+:root {
+  --own: #2f6f62;      /* a span's own work */
+  --wait: #dcdcd6;     /* time spent waiting on something below */
+  --cause: #8c2f39;    /* the operation that actually caused it */
+}
+@media (prefers-color-scheme: dark) {
+  :root { --own: #6fb3a3; --wait: #343a3e; --cause: #d4707c; }
+}
+figure.fig { margin: 2rem 0; }
+figure.fig svg { width: 100%; height: auto; display: block; overflow: visible; }
+figure.fig figcaption {
+  color: var(--muted); font-size: 0.8125rem; line-height: 1.5; margin-top: 0.75rem;
+}
+.fig .wait { fill: var(--wait); }
+.fig .own { fill: var(--own); }
+.fig .cause { fill: var(--cause); }
+.fig .rule { stroke: var(--rule); stroke-width: 1; }
+.fig text {
+  font: 10px ui-monospace, SFMono-Regular, Menlo, monospace;
+  fill: var(--fg); dominant-baseline: middle;
+}
+.fig text.mut { fill: var(--muted); }
+.fig text.hd {
+  font: 600 10px ui-monospace, SFMono-Regular, Menlo, monospace;
+  fill: var(--muted); letter-spacing: 0.06em; text-transform: uppercase;
+}
