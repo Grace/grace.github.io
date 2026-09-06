@@ -97,16 +97,19 @@ figure.fig svg { width: 100%; height: auto; display: block; overflow: visible; }
 figure.fig figcaption {
   color: var(--muted); font-size: 0.8125rem; line-height: 1.5; margin-top: 0.75rem;
 }
-.fig .wait { fill: var(--wait); }
-.fig .own { fill: var(--own); }
-.fig .cause { fill: var(--cause); }
-.fig .rule { stroke: var(--rule); stroke-width: 1; }
+/* Fallbacks are not decoration. An SVG rect with an unresolvable fill paints
+   solid black, so a stale or half-loaded stylesheet turns these figures into
+   bar-shaped inkblots rather than degrading. */
+.fig .wait { fill: var(--wait, #dcdcd6); }
+.fig .own { fill: var(--own, #2f6f62); }
+.fig .cause { fill: var(--cause, #8c2f39); }
+.fig .rule { stroke: var(--rule, #e2e2dd); stroke-width: 1; }
 .fig text {
   font: 10px ui-monospace, SFMono-Regular, Menlo, monospace;
-  fill: var(--fg); dominant-baseline: middle;
+  fill: var(--fg, #1a1c1e); dominant-baseline: middle;
 }
-.fig text.mut { fill: var(--muted); }
+.fig text.mut { fill: var(--muted, #5d6470); }
 .fig text.hd {
   font: 600 10px ui-monospace, SFMono-Regular, Menlo, monospace;
-  fill: var(--muted); letter-spacing: 0.06em; text-transform: uppercase;
+  fill: var(--muted, #5d6470); letter-spacing: 0.06em; text-transform: uppercase;
 }
