@@ -1,13 +1,18 @@
-title: Grace Christenbery
-tagline: Software Engineer
+title: Grace
+tagline: AI governance and compliance engineering
 description: >-
-  Notes on AI/ML infrastructure, distributed systems, observability, reliability
-  and production engineering.
+  Infrastructure and evidence tooling for systems that call large language
+  models: telemetry you can query, controls that survive an audit period, and
+  the reconciliation tests that catch what your logs stopped recording.
 url: https://grace.github.io
 # Without this Jekyll normalizes post dates to UTC, so an evening post
 # published on the 4th appears as the 5th.
 timezone: America/New_York
 github_username: Grace
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
 
 permalink: /:year/:month/:day/:title/
 markdown: kramdown
