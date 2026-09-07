@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Zero releases is why your LLM token spend won't add up"
-subtitle: "Every GenAI instrumentation library spells the token count differently, so you normalize them. Then you find out the schema you are normalizing to was moved into a repository that has never tagged a release, and 'conformant' stops having a version attached to it."
-description: "The gen_ai.* semantic conventions were deprecated out of one repository and moved into another that has zero tags and zero releases. Normalizing GenAI telemetry means choosing which unversioned target to normalize to, and the choice belongs on the span."
+title: "LLM telemetry has no standard. Here’s how to normalize it."
+subtitle: "Every GenAI instrumentation library spells the same facts differently, so nothing about your model calls can be queried as one thing — and the semantic conventions that would settle it currently have no released version to normalize against."
+description: "GenAI instrumentation libraries each use their own attribute names, so LLM telemetry cannot be queried as one dataset. Here is how to normalize it, and how to handle the fact that the conventions you would normalize to have not shipped a release."
 date: 2026-09-07 12:00:00 -0400
 ---
 
@@ -32,11 +32,57 @@ pick, or picked them from a version of the standard that has since changed. The
 data is all there. It is just not addressable as one column, and no dashboard
 can sum a column that does not exist.
 
-So you do the obvious thing. You normalize at the pipeline — one processor in
-the collector, rewriting each dialect into the conventions — and every service
-starts speaking one vocabulary without anyone re-instrumenting anything.
+So you do the obvious thing: translate every dialect into one vocabulary, at
+the pipeline, where you can do it once instead of in every service.
 
-That is when the actual problem shows up.
+## What that looks like
+
+I built [genai-interlingua][repo] for this. It recognizes the dialect a span is
+written in, rewrites it into one `gen_ai.*` schema, and records on the span
+whatever the translation could not carry.
+
+The fastest way to see what it does to your own data is the CLI, which reads
+OTLP/JSON on stdin and writes it on stdout:
+
+```
+go install github.com/Grace/genai-interlingua/cmd/interlingua@v0.2.0
+cat captured-span.json | interlingua -target v1.41.0
+```
+
+An OpenLLMetry span goes in with `gen_ai.usage.prompt_tokens` and
+`traceloop.workflow.name` on it. It comes out still carrying those — nothing is
+deleted by default — plus the normalized keys:
+
+```
+gen_ai.provider.name           = openai
+gen_ai.usage.input_tokens      = 412
+gen_ai.usage.output_tokens     = 27
+
+interlingua.dialect            = openllmetry
+interlingua.target             = v1.41.0
+interlingua.lossy              = [gen_ai.usage.total_tokens, ...]
+interlingua.lossy.count        = 5
+```
+
+That last pair is the part I care about most, and I will come back to it.
+
+**The CLI is for looking, not for running.** It is how you check what the
+mapping does to a payload you have captured, before you trust it. In a real
+pipeline you would not shell out per span — the same logic ships as an
+OpenTelemetry Collector processor, which is the integration that actually
+matters:
+
+```yaml
+processors:
+  genaiinterlingua:
+    target: v1.41.0
+```
+
+One processor in the collector, and every service behind it starts speaking one
+vocabulary with nothing re-instrumented.
+
+Which raises the question the rest of this post is about: **normalize to
+what, exactly?**
 
 ## There is no version to normalize to
 
@@ -147,23 +193,18 @@ passes today, which I would not have bet on before writing it.
 
 ---
 
-The working example is [genai-interlingua][repo] — a collector processor that
-takes GenAI spans in any of six instrumentation dialects and emits one
-`gen_ai.*` schema, with the target as a flag and the losses on the span. There
-are [binaries on the releases page][releases] for the six usual platforms, or:
+[genai-interlingua][repo] does all four, across six instrumentation dialects.
+Source and Collector configuration are in the repository; there are
+[binaries on the releases page][releases] for the usual six platforms.
 
-```
-go install github.com/Grace/genai-interlingua/cmd/interlingua@v0.2.0
-cat span.json | interlingua -target v1.41.0
-```
-
-It reads OTLP/JSON on stdin and writes it on stdout, so you can point it at a
-captured payload without building a collector to find out what it does to one.
-
-The [moving-target write-up][mt] is the long version of this argument, and
-[what capturing the real libraries found][findings] is what happened when I
-stopped trusting my own fixtures: five of seven captures turned up a bug that a
-fully green test suite could not see.
+Two things in it go further than this post does. The
+[moving-target write-up][mt] is the long version of the schema argument, with
+the full timeline and what happens to everyone the day that repository finally
+tags something. And [what capturing the real libraries found][findings] is what
+happened when I stopped trusting my own fixtures and recorded spans from the
+libraries actually running: five of seven captures turned up a mapping bug that
+a completely green test suite could not see, including one in OpenTelemetry's
+own instrumentation output.
 
 [repo]: https://github.com/Grace/genai-interlingua
 [releases]: https://github.com/Grace/genai-interlingua/releases
