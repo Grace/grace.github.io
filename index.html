@@ -7,7 +7,7 @@ services firm — the systems that have to record what happened accurately enoug
 be reconciled, and refuse the transfers that shouldn't happen — and I carry the
 pager for them.</p>
 
-<p>The side projects are the same discipline pointed at model traffic. An audit
+<p>The work below is that same discipline pointed at model traffic. An audit
 log is a ledger. Splitting one inference bill back out per team is chargeback
 accounting. It turns out the interesting problems in AI infrastructure are the
 ones finance has been solving for a century.</p>
@@ -15,6 +15,18 @@ ones finance has been solving for a century.</p>
 <h2>Things I've built</h2>
 
 <ul class="posts">
+  <li>
+    <a class="title" href="https://github.com/Grace/genai-interlingua">genai-interlingua</a>
+    <span class="date">Go · OpenTelemetry processor · <a href="/demos/genai-interlingua/">try it in your browser →</a></span>
+    <div class="excerpt">Six GenAI instrumentation libraries, six names for the
+    same token count, so nothing about your model calls can be queried as one
+    thing. This normalizes them into one <code>gen_ai.*</code> schema and writes
+    on each span what the translation cost — because the interesting question is
+    not the renaming, it is that the conventions being renamed <em>to</em> were
+    moved into a repository that has never tagged a release. Every dialect is
+    backed by spans captured from the real library; five of seven captures found
+    a mapping bug a completely green test suite could not see.</div>
+  </li>
   <li>
     <a class="title" href="https://github.com/Grace/switchboard">switchboard</a>
     <span class="date">Go · LLM gateway</span>
@@ -42,19 +54,6 @@ ones finance has been solving for a century.</p>
     that were never meant to leave, and turns a decline into an oracle a
     fraudster can query. warden decides what crosses the boundary, and in what
     vocabulary.</div>
-  </li>
-  <li>
-    <a class="title" href="https://github.com/Grace/inquest">inquest</a>
-    <span class="date">Go · distributed tracing</span>
-    <div class="excerpt">Works out which service actually caused a slowdown, by
-    ranking on self time — a span's duration minus the wall-clock its children
-    cover — rather than on duration. Everything on the path of a slow call gets
-    slower by about the same amount, so duration makes every service on the path
-    look guilty, and only the shape of the trace separates the cause from the
-    things waiting on it. Scored against labeled failures in the OpenTelemetry
-    Demo, where it names the wrong service more often than the right one; the
-    README publishes that number and the flaw in the harness that produced
-    it.</div>
   </li>
   <li>
     <a class="title" href="https://www.npmjs.com/package/@gracefulcode/paladin">@gracefulcode/paladin</a>
