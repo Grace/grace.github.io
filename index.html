@@ -28,6 +28,20 @@ ones finance has been solving for a century.</p>
     a mapping bug a completely green test suite could not see.</div>
   </li>
   <li>
+    <a class="title" href="https://github.com/Grace/ranger">ranger</a>
+    <span class="date">Go · distributed tracing</span>
+    <div class="excerpt">Navigates distributed traces to find the most likely
+    root cause: it walks the OpenTelemetry trace DAG for the deepest span whose
+    deviation from baseline is not explained by its children, then follows
+    resource attributes through build provenance to a commit range. The ranking
+    is deterministic — the same incident yields the same answer, and the inputs
+    and the scoring are shown — and an LLM is optional, used only to narrate a
+    result it did not produce. Pre-alpha: scored against four labeled failures in
+    the OpenTelemetry Demo it gets top-1 25%, and the README publishes that
+    number alongside the drift confound in the harness that makes it a floor on
+    the error rate rather than an estimate of it.</div>
+  </li>
+  <li>
     <a class="title" href="https://github.com/Grace/switchboard">switchboard</a>
     <span class="date">Go · LLM gateway</span>
     <div class="excerpt">An LLM gateway that can prove what happened. One

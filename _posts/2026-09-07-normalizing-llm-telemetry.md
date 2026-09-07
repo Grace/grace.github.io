@@ -66,6 +66,11 @@ interlingua.lossy.count        = 5
 
 That last pair is the part I care about most, and I will come back to it.
 
+If you would rather not install anything, [the same thing runs in your
+browser][demo] — it is this compiled to WebAssembly, with the captured spans
+from all seven libraries as presets. Switching the target there is the fastest
+way to see what the rest of this post is about.
+
 **The CLI is for looking, not for running.** It is how you check what the
 mapping does to a payload you have captured, before you trust it. In a real
 pipeline you would not shell out per span — the same logic ships as an
@@ -194,8 +199,9 @@ passes today, which I would not have bet on before writing it.
 ---
 
 [genai-interlingua][repo] does all four, across six instrumentation dialects.
-Source and Collector configuration are in the repository; there are
-[binaries on the releases page][releases] for the usual six platforms.
+There is a [browser demo][demo] if you want to see it work before installing
+anything; source and Collector configuration are in the repository, and there
+are [binaries on the releases page][releases] for the usual six platforms.
 
 Two things in it go further than this post does. The
 [moving-target write-up][mt] is the long version of the schema argument, with
@@ -207,6 +213,7 @@ a completely green test suite could not see, including one in OpenTelemetry's
 own instrumentation output.
 
 [repo]: https://github.com/Grace/genai-interlingua
+[demo]: /demos/genai-interlingua/
 [releases]: https://github.com/Grace/genai-interlingua/releases
 [mt]: https://github.com/Grace/genai-interlingua/blob/main/docs/moving-target.md
 [findings]: https://github.com/Grace/genai-interlingua/blob/main/docs/findings.md
