@@ -1,8 +1,8 @@
 title: Grace Christenbery
-tagline: Software engineer — AI infrastructure, financial systems, rules engines
+tagline: Software Engineer
 description: >-
-  Notes on LLM gateways, supply-chain security for agent tooling, and building
-  controls that sit in the path of high-risk traffic.
+  Notes on AI/ML infrastructure, distributed systems, observability, reliability
+  and production engineering.
 url: https://grace.github.io
 # Without this Jekyll normalizes post dates to UTC, so an evening post
 # published on the 4th appears as the 5th.
