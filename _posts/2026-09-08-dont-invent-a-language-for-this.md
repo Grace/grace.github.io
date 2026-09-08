@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Don’t invent a language for this"
-subtitle: "The obvious next step after normalizing LLM telemetry is a config format for the mappings, and a standard to submit it to. One of those is a mistake, one is real, and they are not the ones you would guess."
+subtitle: "The obvious next step after normalizing LLM telemetry is a config format for the mappings, and a standard to submit it to. I tried the format. It was the wrong abstraction. The standard is worth doing — for something other than the mappings."
 description: "Should telemetry normalization have its own DSL, and should the mappings be standardized? OTTL already exists and half the rules cannot be data in any format. The gap worth standardizing is cross-registry equivalence with value transforms, and a vocabulary for what a translation cost."
 date: 2026-09-08 00:51:03 -0400
 ---
@@ -13,10 +13,12 @@ than dropped in silence.
 
 Two questions came back, and they are the right two. Should the mappings become
 a format — JSON, a small DSL, something SPL-shaped — instead of code? And should
-this be a standard, submitted to somebody?
+any of this be standardized, by somebody other than me?
 
-The short answers are no and yes. But the *no* is more interesting than it
-sounds, and the *yes* is not about the thing you would standardize first.
+No, and yes. The *no* is more interesting than it sounds: I built the format
+before deciding against it, and what killed it was not taste. And the *yes*
+turns out not to be about the mappings at all, which is where this ends up and
+the part I would keep if you only read one section.
 
 ## Three layers that keep getting conflated
 
@@ -58,11 +60,22 @@ token-cache field that v1.41.0 spells `cache_creation` and the new repository
 spells `cache_write`. Fifty keys and seventy-two keys, reproduced exactly. The
 hand-typed tables had been right, which I would not have bet on.
 
-The mapping half is where it gets interesting. I converted one dialect's rules
-from Go calls into a declared table, and the split fell out at almost exactly
-half. Twenty mappings state cleanly as data: read this key, lowercase it, run it
-through this lookup, write it there. The rest do not, and they do not fail to be
-data in a way a better format would fix.
+The mapping half is where it gets interesting. I converted five of the six
+dialects from Go calls into declared tables — 86 mappings state cleanly as data
+against 38 that do not, so roughly seven in ten. Stating one looks like: read
+this key, lowercase it, cut it at the first dot, run it through this lookup,
+write it there.
+
+The ratio is an average over emitters that are nothing like each other, which
+matters more than the average. LiteLLM is 20 against 4. OpenInference is 16
+against 16, because it packs every sampling parameter — temperature, top_p, the
+penalties, the seed, nine others — into one JSON string, and no table reaches
+inside a string. The sixth dialect is not migratable at all: it is the fallback
+for spans nobody designed, and it works by resolving each attribute against the
+entire semantic-convention registry at runtime, so writing it as data would
+either duplicate the registry or admit it carries nothing.
+
+The three in ten that do not state are not waiting for a better format.
 
 Consider reassembling `gen_ai.prompt.0.tool_calls.1.arguments` — two levels of
 indexing — into one nested JSON document. Or deciding what `traceloop.entity.name`
@@ -71,10 +84,11 @@ tool. Or refusing to map a Braintrust span carrying three evaluation scores,
 because the conventions model one evaluation per span and picking one silently
 would be worse than admitting the mismatch.
 
-Those are not transformations of a value. They are *readings of a span*. A
-format expressive enough to state them has conditionals, loops and a JSON parser
-— at which point you have written a programming language, and a worse one than
-the several already available.
+Those are not transformations of a value. They are *readings of a span* — they
+need the whole span in hand, not one attribute, because what they produce
+depends on what else is there. A format expressive enough to state them has
+conditionals, loops and a JSON parser, at which point you have written a
+programming language, and a worse one than the several already available.
 
 ## And one of those already exists
 
@@ -91,10 +105,32 @@ $ interlingua -emit ottl -dialect litellm -target v1.41.0
 ```
 
 Out comes a `transform` processor you paste into your own Collector. No custom
-build, no Go, no dependency on my repository continuing to exist. A stock
-Collector accepts it; I checked, in both target schemas, because a generated
-config that has only ever been compared against a golden file has not been
-tested, it has been photographed.
+build, no Go, no dependency on my repository continuing to exist.
+
+A stock Collector accepts it; I checked, in both target schemas, because a
+generated config that has only ever been compared against a golden file has not
+been tested, it has been photographed.
+
+Then I checked the thing that actually matters, which is whether it *means* the
+same thing. Every captured span goes through the Go processor and through a real
+Collector running the exported config, and the two outputs are compared
+attribute by attribute. It found four bugs on its first run, and every one of
+them had been sitting behind a config that parsed cleanly and looked right:
+
+- A scalar-to-list conversion that wrapped unconditionally, where the Go code
+  wraps only a string. On the one emitter whose value is already an array, the
+  attribute came out as a list containing a list.
+- A lookup table that never fired on array values at all. Go maps over the
+  elements; OTTL has no iteration, so the generated statements compare the whole
+  array against each table key and match nothing. That one is not fixable — it
+  is now declared instead, which is the point.
+- An enum guard that was *more* destructive than the processor, deleting a
+  non-conformant value the processor deliberately preserves.
+- And a header claiming coverage it did not have.
+
+The third and fourth are the ones I would have shipped. An export that quietly
+does less than it advertises is the exact failure this post is about, and I
+wrote it into my own tool while writing the argument against it.
 
 And because the export is a subset, it says so in its own header:
 
@@ -166,7 +202,33 @@ reading of a span — and no declarative format should try to express that.
 Adding value transforms would not make schema files sufficient for normalizing
 GenAI telemetry. It would make them able to describe migrations the conventions
 have *already made*, which is a narrower claim and the only one the evidence
-supports. I would rather find that out generating a table than in review.
+supports.
+
+Then it cost me the correction too, which is the more useful part. I migrated a
+second dialect and the ratio inverted: the gaps a format change would fix went
+from a minority to a clear majority, and I rewrote the conclusion to say the
+fixable share grows as you sample more emitters. Then I migrated three more and
+it went back.
+
+| sample | fixable by a format change | not expressible in any format | fixable share |
+| --- | ---: | ---: | ---: |
+| 1 dialect | 4 | 8 | 33% |
+| 2 dialects | 24 | 16 | 60% |
+| 5 dialects | 44 | 76 | 37% |
+
+The middle row was one unusually-shaped emitter at n=2. The Vercel AI SDK writes
+the same fact under an `ai.*` name on the span your code creates and a `gen_ai.*`
+name on the span its provider adapter creates, so nearly every mapping it has
+carries two spellings — and twelve of those twenty-four fixable gaps were that
+one property of that one library. My correction was worse than the thing it
+corrected.
+
+So the first answer was right, and I only know that because the table
+regenerates. If I had written "a minority" as prose in September I would have
+had no way to discover in October that I had briefly and confidently believed
+otherwise. **Generate the number that your argument turns on.** Not because
+generated numbers are true — these moved three times — but because a number
+that moves in front of you is one you can still be wrong about out loud.
 
 Two things are worth writing down:
 
