@@ -3,7 +3,7 @@ layout: post
 title: "Don’t invent a language for this"
 subtitle: "The obvious next step after normalizing LLM telemetry is a config format for the mappings, and a standard to submit it to. One of those is a mistake, one is real, and they are not the ones you would guess."
 description: "Should telemetry normalization have its own DSL, and should the mappings be standardized? OTTL already exists and half the rules cannot be data in any format. The gap worth standardizing is cross-registry equivalence with value transforms, and a vocabulary for what a translation cost."
-date: 2026-09-08 09:00:00 -0400
+date: 2026-09-08 00:51:03 -0400
 ---
 
 [Last post][prev] I argued that GenAI instrumentation libraries each spell the
