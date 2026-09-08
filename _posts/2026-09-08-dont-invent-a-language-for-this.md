@@ -150,6 +150,24 @@ say that `bedrock` and `aws.bedrock` are the same provider, that milliseconds
 and seconds are the same duration, or — the one I care about most — that a
 particular translation was *not faithful*, and in exactly which respect.
 
+I stopped asserting that and measured it. `genai-interlingua` now emits schema
+files too, and [the resulting gap table][gap] is generated from the rule tables
+rather than written by me. The blunt version: for LiteLLM at v1.41.0, a schema
+file expresses **zero** of the mappings. At `genai-main` it manages one. Not
+because the format is bad — because every transformation it has changes a
+*name*, and the two mappings LiteLLM actually needs change a *value*. Eighteen
+of the rest need no rename at all, since LiteLLM already writes the conventions'
+own names, and counting those as coverage would credit the format for work
+nobody did.
+
+That measurement also cost me half my argument, which is the useful part. Most
+of what a schema file cannot carry, it cannot carry because the work is a
+reading of a span — and no declarative format should try to express that.
+Adding value transforms would not make schema files sufficient for normalizing
+GenAI telemetry. It would make them able to describe migrations the conventions
+have *already made*, which is a narrower claim and the only one the evidence
+supports. I would rather find that out generating a table than in review.
+
 Two things are worth writing down:
 
 **Cross-registry equivalence with value transforms.** Not just "this key became
@@ -208,12 +226,18 @@ Do standardize the thing nobody currently can say: *this telemetry was
 translated, here is from what and to what, and here is precisely what did not
 survive.*
 
+Both proposals are [drafted in the open][drafts] and neither is filed, which is
+the honest state of them. The second one is visibly weaker than the first, and
+its own draft says so.
+
 A translation layer that drops data silently is worse than no translation layer,
 because you will trust the result. That is true of my normalizer, it is true of
 your vendor's ingest pipeline, and right now neither of us has a standard way to
 tell you which.
 
 [prev]: /2026/09/07/normalizing-llm-telemetry/
+[gap]: https://github.com/Grace/genai-interlingua/blob/main/docs/export-gap.md
+[drafts]: https://github.com/Grace/genai-interlingua/tree/main/docs/oteps
 [repo]: https://github.com/Grace/genai-interlingua
 [sf]: https://opentelemetry.io/docs/specs/otel/schemas/file_format_v1.1.0/
 [wsc]: https://github.com/open-telemetry/weaver/blob/main/docs/schema-changes.md
