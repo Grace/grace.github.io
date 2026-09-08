@@ -92,7 +92,7 @@ out of nothing if you let it.
 
 ## What it does to a real incident
 
-I ran this against the OpenTelemetry Demo — commit `8c47d47` — with the
+I ran ranger against the OpenTelemetry Demo — commit `8c47d47` — with the
 `adManualGc` flag on, which triggers full manual garbage collections in the ad
 service. Five minutes of baseline, five minutes with the flag on, 88 operations
 ranked.
@@ -249,5 +249,5 @@ you only count hits. A service that only ever appeared as "waiting on something
 below it" counts as a miss, never a hit — anything else is marking your own
 homework on the one distinction the tool claims to make.
 
-The code is at [github.com/Grace/inquest](https://github.com/Grace/inquest).
+The code is at [github.com/Grace/ranger](https://github.com/Grace/ranger).
 Pre-alpha, and the README says so.
