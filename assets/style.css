@@ -140,3 +140,5 @@ p.lede {
   font-size: 1.1875rem; line-height: 1.55; letter-spacing: -0.005em;
   margin: 0 0 2.5rem;
 }
+
+p.note { color: var(--muted); font-size: 0.9375rem; margin: -0.35rem 0 1.1rem; }

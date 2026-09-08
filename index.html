@@ -1,11 +1,12 @@
 ---
 layout: default
-description: AI/ML infrastructure, distributed systems, observability, reliability, and production engineering.
+description: Full-stack engineer — distributed systems, observability, and ML infrastructure. Browser interfaces, the services behind them, and the instrumentation that shows what actually happened.
 ---
-<p class="lede">Most of what gets sold as AI governance is a filter with a
-dashboard attached. I write about the parts that actually produce evidence —
-telemetry you can query, controls that survive an audit period, and the
-reconciliation tests that catch what your logs quietly stopped recording.</p>
+<p class="lede">I build both halves — the interfaces people actually touch and
+the systems underneath them. Lately that means distributed tracing that finds a
+real root cause instead of a dashboard, telemetry that survives six incompatible
+instrumentation libraries, and Go tools compiled to WebAssembly so you can run
+them in your browser rather than take my word for it.</p>
 
 <h2>Writing</h2>
 
@@ -41,6 +42,36 @@ reconciliation tests that catch what your logs quietly stopped recording.</p>
 </ul>
 
 <p><a href="/writing/">All writing →</a></p>
+
+<h2>Demos</h2>
+
+<p class="note">Each one is the real Go tool compiled to WebAssembly and running
+in your browser — not a reimplementation. Nothing is uploaded.</p>
+
+<ul class="posts">
+  <li>
+    <a class="title" href="/demos/paladin/">paladin — see what your agent reads</a>
+    <span class="date">integrity monitoring · runs in your browser</span>
+    <div class="excerpt">Paste a <code>CLAUDE.md</code> or <code>.cursorrules</code>
+    and watch the characters your font refuses to draw appear: zero-width spaces,
+    bidi overrides that reorder text on screen, Cyrillic letters wearing Latin
+    faces.</div>
+  </li>
+  <li>
+    <a class="title" href="/demos/warden/">warden — what a decline is allowed to say</a>
+    <span class="date">rules engines · runs in your browser</span>
+    <div class="excerpt">Switch between a public, partner and internal caller and
+    watch what crosses the boundary change, with everything held back listed
+    underneath.</div>
+  </li>
+  <li>
+    <a class="title" href="/demos/genai-interlingua/">genai-interlingua — normalize a GenAI span</a>
+    <span class="date">OpenTelemetry · runs in your browser</span>
+    <div class="excerpt">Paste a span from any of six instrumentation libraries
+    and see it normalized into one <code>gen_ai.*</code> schema, with what the
+    translation cost written onto the result.</div>
+  </li>
+</ul>
 
 <h2>Things I've built</h2>
 

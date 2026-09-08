@@ -1,9 +1,9 @@
 title: Grace
-tagline: AI governance and compliance engineering
+tagline: Full-stack engineer — distributed systems, observability, ML infrastructure
 description: >-
-  Infrastructure and evidence tooling for systems that call large language
-  models: telemetry you can query, controls that survive an audit period, and
-  the reconciliation tests that catch what your logs stopped recording.
+  Browser interfaces, the services behind them, and the instrumentation that
+  shows what actually happened: distributed tracing, telemetry pipelines, ML
+  infrastructure, and tools you can run yourself.
 url: https://grace.github.io
 # Without this Jekyll normalizes post dates to UTC, so an evening post
 # published on the 4th appears as the 5th.
