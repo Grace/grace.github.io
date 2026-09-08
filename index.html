@@ -50,6 +50,14 @@ in your browser — not a reimplementation. Nothing is uploaded.</p>
 
 <ul class="posts">
   <li>
+    <a class="title" href="/demos/ranger/">ranger — find the service that actually broke</a>
+    <span class="date">root-cause localization · runs in your browser</span>
+    <div class="excerpt">A real incident from the OpenTelemetry Demo, localized to
+    one service out of 88 ranked operations. Every ancestor on the request path
+    slowed by the same amount; self time is what separates the cause from the
+    callers waiting on it.</div>
+  </li>
+  <li>
     <a class="title" href="/demos/paladin/">paladin — see what your agent reads</a>
     <span class="date">integrity monitoring · runs in your browser</span>
     <div class="excerpt">Paste a <code>CLAUDE.md</code> or <code>.cursorrules</code>
@@ -89,10 +97,12 @@ in your browser — not a reimplementation. Nothing is uploaded.</p>
     <a class="title" href="https://github.com/Grace/ranger">ranger</a>
     <span class="date">Go · distributed tracing</span>
     <div class="excerpt">Walks the OpenTelemetry trace DAG for the deepest span
-    whose deviation from baseline its children do not explain, then follows build
-    provenance to a commit range. Deterministic, and pre-alpha honestly: top-1 of
-    25% against four labeled failures, with the confound that makes that a floor
-    published alongside it.</div>
+    whose deviation from baseline its children do not explain — the measurement
+    that separates the service that broke from every caller waiting on it.
+    Deterministic, and pre-alpha honestly: top-1 of 25% against four labeled
+    failures out of 88 ranked operations, with the confound that makes that a
+    floor published alongside it. <a href="/demos/ranger/">Try it on a real
+    incident &rarr;</a></div>
   </li>
   <li>
     <a class="title" href="https://github.com/Grace/paladin">paladin</a>

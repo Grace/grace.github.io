@@ -1,0 +1,119 @@
+---
+layout: null
+title: "ranger — find the service that actually broke"
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find the service that actually broke — ranger</title>
+<meta name="description" content="A real incident from the OpenTelemetry Demo, localized to one service. Duration says every service on the path is guilty; self time says which one did the work. Interactive, no server.">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  body { max-width: 62rem; }
+  .lede { color: var(--muted); margin: 0 0 1.75rem; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+           gap: .75rem; margin: 0 0 1.75rem; }
+  .fact { border: 1px solid var(--rule); border-radius: 8px; padding: .7rem .85rem; }
+  .fact dt { font: 600 .6875rem/1.4 var(--sans); text-transform: uppercase;
+             letter-spacing: .07em; color: var(--muted); margin: 0 0 .25rem; }
+  .fact dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+             font-size: .9375rem; }
+  /* The explorer wants more width than a column of prose does, so the frame
+     breaks out of the text measure and centres itself on the viewport. */
+  .frame { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden;
+           background: var(--code-bg);
+           width: min(96vw, 1320px);
+           margin-left: calc(50% - min(48vw, 660px)); }
+  .frame iframe { display: block; width: 100%; height: 88vh; min-height: 34rem; border: 0;
+                  background: #fff; }
+  .framehead { display: flex; justify-content: space-between; align-items: baseline;
+               gap: 1rem; width: min(96vw, 1320px);
+               margin-left: calc(50% - min(48vw, 660px));
+               margin-bottom: .5rem; font-size: .875rem; color: var(--muted); }
+  .note { color: var(--muted); font-size: .875rem; margin: .75rem 0 0; }
+  .caveat { border-left: 2px solid var(--rule); padding-left: 1rem; color: var(--muted);
+            font-size: .9375rem; margin: 2.5rem 0 0; }
+  .caveat strong { color: var(--fg); }
+</style>
+</head>
+<body>
+<header class="site">
+  <a class="name" href="/">Grace</a>
+  <div class="tagline">Full-stack engineer — distributed systems, observability, ML infrastructure</div>
+</header>
+
+<p style="color:var(--muted);font-size:.875rem;margin:0 0 .35rem">
+  <a href="/demos/">demos</a> / ranger
+</p>
+<h1>Find the service that actually broke</h1>
+<p class="lede">
+  A span's duration includes the time its children were running, so when
+  something deep in a call tree slows down, every ancestor slows by exactly the
+  same amount. Sort by what got slower and the whole request path is at the top
+  of the list, all of it correct, none of it useful. <strong>Self time</strong> —
+  the work a span did itself — is what separates the service that broke from the
+  services waiting on it.
+</p>
+
+<dl class="facts">
+  <div class="fact"><dt>Incident</dt><dd>adManualGc</dd></div>
+  <div class="fact"><dt>Operations ranked</dt><dd>88</dd></div>
+  <div class="fact"><dt>Localized</dt><dd>ad · GetAds</dd></div>
+  <div class="fact"><dt>Runner-up score</dt><dd>496 vs 0.78</dd></div>
+</dl>
+
+<div class="framehead">
+  <span>Live report — click a trace to change the timeline</span>
+  <a href="explorer.html">open full width &rarr;</a>
+</div>
+<div class="frame">
+  <iframe src="explorer.html" title="ranger incident explorer" loading="lazy"></iframe>
+</div>
+<p class="note">
+  Real traces, not a simulation: two 300-second windows captured from the
+  <a href="https://github.com/open-telemetry/opentelemetry-demo">OpenTelemetry Demo</a>
+  at commit <code>8c47d47</code>, with the demo's own <code>adManualGc</code>
+  feature flag providing ground truth. The page is self-contained — every trace
+  is embedded, nothing is fetched, and it opens from <code>file://</code> on a
+  laptop with no network, which is the state most people are in during an
+  incident.
+</p>
+
+<h2>What to look at</h2>
+<p>
+  Open the first trace in the table. The ancestors — load-generator, the proxy,
+  the frontend — are drawn in grey, because their own work did not change; they
+  are waiting. The <span style="color:var(--fg)"><strong>red bar</strong></span>
+  is <code>ad · oteldemo.AdService/GetAds</code>, whose self time went from
+  4.2ms to 2.10s. That is the entire claim, and it is visible in one screen.
+</p>
+<p>
+  The ranking on the left is scored by effect size — each operation's self-time
+  shift as a share of its own baseline. The cause scores <code>+49642%</code>.
+  The next operation down scores <code>+78%</code>. Localization is not a close
+  call in this window, which is exactly why it is the case worth showing first.
+</p>
+
+<div class="caveat">
+  <p>
+    <strong>This is one case, and the good one.</strong> Scored against four
+    labeled failures from the same demo, ranger gets top-1 25% and names the
+    wrong service in a quarter to a half of cases depending on ranking mode. The
+    harness that produced those numbers also has a drift confound large enough
+    that they should be read as a floor on the error rate rather than an estimate
+    of it. The full accounting, including the three cases that had to be excluded
+    and why, is in
+    <a href="https://github.com/Grace/ranger">the README</a> — and the reasoning
+    behind the measurement is in
+    <a href="/2026/09/05/duration-makes-everyone-look-guilty/">the write-up</a>.
+  </p>
+</div>
+
+<p class="note" style="margin-top:2rem">
+  <a href="https://github.com/Grace/ranger">github.com/Grace/ranger</a> ·
+  Go · pre-alpha, and the README says so
+</p>
+</body>
+</html>
