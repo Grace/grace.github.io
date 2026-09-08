@@ -59,9 +59,9 @@ title: "ranger — find the service that actually broke"
 
 <dl class="facts">
   <div class="fact"><dt>Incident</dt><dd>adManualGc</dd></div>
-  <div class="fact"><dt>Operations ranked</dt><dd>88</dd></div>
+  <div class="fact"><dt>Operations ranked</dt><dd>84</dd></div>
   <div class="fact"><dt>Localized</dt><dd>ad · GetAds</dd></div>
-  <div class="fact"><dt>Runner-up score</dt><dd>496 vs 0.78</dd></div>
+  <div class="fact"><dt>Runner-up score</dt><dd>246 vs 1.25</dd></div>
 </dl>
 
 <div class="framehead">
@@ -87,26 +87,40 @@ title: "ranger — find the service that actually broke"
   the frontend — are drawn in grey, because their own work did not change; they
   are waiting. The <span style="color:var(--fg)"><strong>red bar</strong></span>
   is <code>ad · oteldemo.AdService/GetAds</code>, whose self time went from
-  4.2ms to 2.10s. That is the entire claim, and it is visible in one screen.
+  9.5ms to 2.36s. That is the entire claim, and it is visible in one screen.
 </p>
 <p>
   The ranking on the left is scored by effect size — each operation's self-time
-  shift as a share of its own baseline. The cause scores <code>+49642%</code>.
-  The next operation down scores <code>+78%</code>. Localization is not a close
-  call in this window, which is exactly why it is the case worth showing first.
+  shift as a share of its own baseline. The cause scores <code>+24606%</code>.
+  The next operation down scores <code>+125%</code>, and it is a
+  <code>load-generator</code> operation: the nearest competitor in this window is
+  the test harness rather than any service.
+</p>
+<p>
+  Ranking ninety-odd operations and reporting the largest score is a maximum over
+  ninety candidates, so the score alone does not say whether it is surprising.
+  Shuffling the two windows' labels within each operation and re-ranking, 300
+  times, says what the best score reaches by chance here: <strong>1.23</strong>.
+  The observed score is 246. <code>p=0.003</code>, and the same seed gives the
+  same answer every time.
 </p>
 
 <div class="caveat">
   <p>
-    <strong>This is one case, and the good one.</strong> Scored against four
-    labeled failures from the same demo, ranger gets top-1 25% and names the
-    wrong service in a quarter to a half of cases depending on ranking mode. The
-    harness that produced those numbers also has a drift confound large enough
-    that they should be read as a floor on the error rate rather than an estimate
-    of it. The full accounting, including the three cases that had to be excluded
-    and why, is in
-    <a href="https://github.com/Grace/ranger">the README</a> — and the reasoning
-    behind the measurement is in
+    <strong>This is one case, and the good one.</strong> Scored against thirteen
+    labeled incidents from the same demo — eight failures, five of them run twice
+    — ranger gets top-1 38% and names the wrong service in 23% of cases under
+    this ranking mode. It is silent for the rest, and the silence is the half
+    worth having.
+  </p>
+  <p>
+    Every case that ran twice agreed with itself, including both that fail, so
+    those failures are systematic rather than unlucky. One case is a control
+    where load rises and nothing breaks: declining is the correct answer there,
+    and without it the decline column could not be read at all. The full
+    accounting, including the cases excluded for having no defensible label, is
+    in <a href="https://github.com/Grace/ranger">the README</a> — and the
+    reasoning behind the measurement is in
     <a href="/2026/09/05/duration-makes-everyone-look-guilty/">the write-up</a>.
   </p>
 </div>
