@@ -3,7 +3,7 @@ layout: post
 title: "Your telemetry was rewritten on the way here"
 subtitle: "Collectors normalize it, backends remap it at ingest, schema files convert it between versions. All of that is load-bearing and none of it leaves a trace. There is no standard way for telemetry to say it was translated, or what the translation cost."
 description: "Telemetry is rewritten constantly in transit — by collectors, by schema files, by vendor ingest pipelines — and none of it can say so. A proposal for recording translation provenance: what it was translated from, to what, and precisely what did not survive."
-date: 2026-09-09 09:00:00 -0400
+date: 2026-09-08 02:08:31 -0400
 ---
 
 Here is a span attribute: `gen_ai.usage.input_tokens: 412`.
