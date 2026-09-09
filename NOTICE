@@ -1,0 +1,85 @@
+grace.github.io
+Copyright 2026 Grace
+
+The site's own writing and code are covered by LICENSE. This file covers what is
+redistributed here but not written here.
+
+
+THE GO TOOLCHAIN
+================
+
+Three demos ship a verbatim copy of wasm_exec.js, the Go toolchain's JavaScript
+shim, and each of them ships a .wasm with the Go runtime linked into it:
+
+  demos/genai-interlingua/wasm_exec.js   demos/genai-interlingua/genai-interlingua.wasm
+  demos/paladin/wasm_exec.js             demos/paladin/paladin.wasm
+  demos/warden/wasm_exec.js              demos/warden/warden.wasm
+
+All three copies of the shim are byte-identical. Each carries a header saying its
+license "can be found in the LICENSE file" -- a file that did not exist in this
+repository until this NOTICE was added. It is reproduced in full below, which is
+what the license itself asks for and what that header was pointing at.
+
+https://go.dev
+
+Copyright 2009 The Go Authors.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google LLC nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+THE DEMO BINARIES
+=================
+
+Each .wasm is compiled from a separate repository, and they are not all under the
+same license:
+
+  demos/genai-interlingua/genai-interlingua.wasm
+      github.com/Grace/genai-interlingua -- Apache License 2.0
+      A copy of that license and its NOTICE sit beside the binary, along with
+      LICENSE.go for the Go code described above.
+
+  demos/paladin/paladin.wasm
+      github.com/Grace/paladin -- MIT License
+
+  demos/warden/warden.wasm
+      github.com/Grace/warden -- MIT License
+
+All three are Copyright 2026 Grace, so the terms above are the terms the author
+chose to publish them under rather than a constraint imposed by someone else.
+They are listed anyway: a reader holding a compiled binary has no way to find
+that out from the binary.
+
+
+THE RANGER DEMO
+===============
+
+demos/ranger/ ships no third-party code, but the data in explorer.html is derived
+from a run of the OpenTelemetry Demo, credited at demos/ranger/index.html and
+licensed under the Apache License, Version 2.0.
+
+  Copyright The OpenTelemetry Authors
+  https://github.com/open-telemetry/opentelemetry-demo
