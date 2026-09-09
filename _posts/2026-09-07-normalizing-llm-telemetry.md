@@ -6,6 +6,18 @@ description: "GenAI instrumentation libraries each use their own attribute names
 date: 2026-09-07 12:00:00 -0400
 ---
 
+> **Added 2026-09-09.** This post doesn't mention
+> [`processor/genainormalizer`][gnorm], which has been in
+> `opentelemetry-collector-contrib` since February and ships in the
+> `otelcol-contrib` binary you are probably already running. If you have this
+> problem, start there: it needs no custom build. It maps OpenInference and
+> OpenLLMetry, hardcodes the version it normalizes to, and does not record what a
+> mapping dropped — which is why the four points under *What to do about it* below
+> still stand, and why I have [taken them upstream][upstream] rather than
+> maintaining a second one. I did not know it existed when I wrote this, which is
+> its own lesson, and the one I would add as a fifth point: before you build a
+> Collector component, go and read the list of Collector components.
+
 Here is the moment you notice. Finance wants the model spend broken down by
 provider, you have OpenTelemetry traces from every service, and you write the
 obvious query: sum the input tokens, group by provider. The number comes back
@@ -171,7 +183,7 @@ conventions have no home for.
 
 ## What to do about it
 
-Three things, none of which require the upstream situation to resolve.
+Four things, none of which require the upstream situation to resolve.
 
 **Make the target a parameter, not a constant.** If your normalizer has a table
 of attribute names in it, that table is a snapshot of one version of a moving
@@ -217,3 +229,5 @@ own instrumentation output.
 [releases]: https://github.com/Grace/genai-interlingua/releases
 [mt]: https://github.com/Grace/genai-interlingua/blob/main/docs/moving-target.md
 [findings]: https://github.com/Grace/genai-interlingua/blob/main/docs/findings.md
+[gnorm]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/genainormalizerprocessor
+[upstream]: https://github.com/Grace/genai-interlingua/blob/main/docs/upstream.md

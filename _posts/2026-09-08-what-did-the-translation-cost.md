@@ -6,6 +6,17 @@ description: "Telemetry is rewritten constantly in transit — by collectors, by
 date: 2026-09-08 02:08:31 -0400
 ---
 
+> **Added 2026-09-09.** When I wrote this I was arguing from my own normalizer.
+> It turns out the strongest evidence for the argument is in someone else's:
+> [`processor/genainormalizer`][gnorm], which ships in `otelcol-contrib`, drops
+> what it cannot carry — by design, and it says so in its own source. From
+> `internal/otelsemconv/coerce.go`: *"src cannot be safely coerced; callers must
+> drop the attribute"* and *"Map / Slice / Bytes: do not stringify. Caller drops
+> the rename."* With its `remove_originals: true` the source attribute is deleted
+> too, so the evidence goes with the data. That is not a criticism of a component
+> I am now [contributing to][upstream]. It is the point of this post, written by
+> someone else, in a comment, where no query can reach it.
+
 Here is a span attribute: `gen_ai.usage.input_tokens: 412`.
 
 You cannot tell, from that, whether the library emitted it that way. It might
@@ -154,3 +165,5 @@ than describe it as further along.
 [schemas]: https://opentelemetry.io/docs/specs/otel/schemas/
 [otep]: https://github.com/Grace/genai-interlingua/blob/main/docs/oteps/0001-translation-provenance.md
 [registry]: https://github.com/Grace/genai-interlingua/tree/main/registry
+[gnorm]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/genainormalizerprocessor
+[upstream]: https://github.com/Grace/genai-interlingua/blob/main/docs/upstream.md
