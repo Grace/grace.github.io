@@ -62,7 +62,10 @@ function render() {
   const text = $in.value;
   if (!text.trim()) { $out.textContent = ""; $verdict.textContent = ""; $facts.innerHTML = ""; return; }
 
-  const r = interlinguaNormalize(text, $target.value, $strip.checked);
+  // The third argument is an originals mode, not a flag: keep | dedupe | prune.
+  // Passing the checkbox's boolean straight through reached Go as the literal
+  // string "<boolean: true>" and every render failed.
+  const r = interlinguaNormalize(text, $target.value, $strip.checked ? "prune" : "keep");
   if (!r.ok) {
     $out.innerHTML = `<span class="err">${esc(r.error)}</span>`;
     $verdict.textContent = "";
