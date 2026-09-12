@@ -254,8 +254,9 @@ did not, which is an embarrassing way round for it to be.
 
 ### What that measures, across six real dialects
 
-Six dialects, nine captured span fixtures, thirty distinct fields. **105 source
-attributes have nowhere in the conventions to go:**
+Six dialects, nine span fixtures — seven captured from the libraries running,
+two hand-built — and thirty distinct fields. **105 source attributes have
+nowhere in the conventions to go:**
 
 | dialect | fields carried (of 30) | attributes with no home |
 |---|---|---|
