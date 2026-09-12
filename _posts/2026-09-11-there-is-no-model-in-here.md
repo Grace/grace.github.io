@@ -2,7 +2,7 @@
 layout: post
 title: "There is no model in here"
 subtitle: "How normalizing GenAI telemetry actually works, in pseudocode: counting evidence instead of predicting it, an integer margin instead of a confidence score, and a rule table small enough to print. The highest score usually loses, and that is the interesting part."
-description: "A walkthrough of how genai-interlingua recognizes which instrumentation library wrote a span, translates it into one gen_ai.* vocabulary, and records what the translation cost. Pseudocode for each stage, and the measurements from six real libraries."
+description: "A walkthrough of how genai-interlingua recognizes which instrumentation library wrote a span, translates it into one gen_ai.* vocabulary, and records what the translation cost. Pseudocode for each stage, and the measurements from six real dialects."
 date: 2026-09-11 20:30:00 -0400
 ---
 
@@ -25,7 +25,8 @@ libraries.
 
 ## The problem, in four lines
 
-A model call produced 412 input tokens. Six libraries record that fact:
+A model call produced 412 input tokens. Here are four of the ways it gets
+written down:
 
 ```
 gen_ai.usage.prompt_tokens   = 412     OpenLLMetry
@@ -98,8 +99,8 @@ measurements][conf] does not publish one.
 
 ### The highest score usually loses
 
-Here is the part I did not expect when I built it. Six of these dialects are
-named libraries. The seventh, `raw`, recognizes hand-rolled instrumentation by
+Here is the part I did not expect when I built it. Five of the six dialects are
+named libraries. The sixth, `raw`, recognizes hand-rolled instrumentation by
 *shape* — it counts attributes the conventions themselves define, plus a table of
 common folk spellings:
 
@@ -251,12 +252,12 @@ loss counter that only counts remembered losses is not a measurement. The
 shape-matching fallback had this right first and the five purpose-built dialects
 did not, which is an embarrassing way round for it to be.
 
-### What that measures, across six real libraries
+### What that measures, across six real dialects
 
-Six libraries, nine captured span fixtures, thirty distinct fields. **105 source
+Six dialects, nine captured span fixtures, thirty distinct fields. **105 source
 attributes have nowhere in the conventions to go:**
 
-| library | fields carried (of 30) | attributes with no home |
+| dialect | fields carried (of 30) | attributes with no home |
 |---|---|---|
 | openllmetry | 21 | 24 |
 | vercel | 19 | 8 |

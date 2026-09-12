@@ -42,16 +42,18 @@ generated, with the incident data embedded. Nothing is uploaded.</p>
   <li>
     <a class="title" href="/demos/genai-interlingua/">genai-interlingua — normalize a GenAI span</a>
     <span class="date">OpenTelemetry · three pages</span>
-    <div class="excerpt">Six instrumentation libraries spell the same token count
-    six different ways, so nothing about your model calls can be queried as one
-    thing. Paste a span — or pick a real capture — and see it rewritten into one
+    <div class="excerpt">Six GenAI dialects spell the same token count six
+    different ways, so nothing about your model calls can be queried as one
+    thing. Pick one of nine real captures — they collapse onto six dialects,
+    because LangChain's spans turn out to be OpenLLMetry's — or paste your own
+    span, and see it rewritten into one
     <code>gen_ai.*</code> schema with what the translation cost recorded on the
     result. Then two pages that go further: the
     <a href="/demos/genai-interlingua/inspector/">inspector</a> takes one
     attribute at a time and says which source key produced it, what evidence the
     reading turned on, and what it could not carry; and
     <a href="/demos/genai-interlingua/conformance.html">what translation costs</a>
-    draws the measurements across all six libraries — the scoring race that picks
+    draws the measurements across all six dialects — the scoring race that picks
     a dialect, and where 105 attributes with no home in the conventions end up.
     <a href="/2026/09/11/there-is-no-model-in-here/">How it works</a>, in
     pseudocode.</div>
@@ -59,5 +61,6 @@ generated, with the incident data embedded. Nothing is uploaded.</p>
 </ul>
 
 <h2>Not built yet</h2>
-<p>An LLM gateway wants a live view of traffic through it: which team, which
-model, what was redacted, and what it cost.</p>
+<p>A public, live view of LLM gateway traffic: which team, which model, what was
+redacted, and what it cost. The normalization underneath it exists; the view
+does not.</p>

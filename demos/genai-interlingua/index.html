@@ -64,10 +64,11 @@ title: "genai-interlingua — normalize a GenAI span"
 
 <h1>Normalize a GenAI span</h1>
 
-<p class="lede">Six instrumentation libraries spell the same facts six different
+<p class="lede">Six GenAI dialects spell the same facts six different
 ways, so nothing about your model calls can be queried as one thing. Pick a span
-below — these are real captures from the libraries running, not written for this
-page — and see it rewritten into one <code>gen_ai.*</code> schema, with whatever
+below — nine real captures from the libraries running, not written for this
+page, collapsing onto six dialects because LangChain's spans turn out to be
+OpenLLMetry's — and see it rewritten into one <code>gen_ai.*</code> schema, with whatever
 the translation could not carry recorded on the span beside the data.</p>
 
 <div class="samples" id="samples"></div>
@@ -102,7 +103,7 @@ paste leaves your browser — there is no server to send it to.</p>
 The <a href="./inspector/">inspector</a> takes one attribute at a time: which
 source key produced this value, what evidence the reading turned on, and what it
 could not carry. <a href="./conformance.html">What translation costs</a> draws the
-measurements across all six libraries — the scoring race that picks a dialect,
+measurements across all six dialects — the scoring race that picks one,
 and where 105 attributes the conventions have no name for end up.</p>
 
 <p class="privacy"><a href="https://github.com/Grace/genai-interlingua">Source</a>
