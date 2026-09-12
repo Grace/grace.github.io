@@ -4,18 +4,20 @@ title: Demos
 description: Interactive demos for the tools — run in your browser, nothing uploaded.
 ---
 <h1>Demos</h1>
-<p class="subtitle">Things easier to show than to describe. Each one is the real
-Go tool compiled to WebAssembly and running in your browser — not a
-reimplementation of it. Nothing is uploaded.</p>
+<p class="subtitle">Things easier to show than to describe. Three of these are
+the real Go tool compiled to WebAssembly and running in your browser — not a
+reimplementation of it. The ranger demo is different: it is a report the Go tool
+generated, with the incident data embedded. Nothing is uploaded.</p>
 
 <ul class="posts">
   <li>
     <a class="title" href="/demos/ranger/">ranger — find the service that actually broke</a>
     <span class="date">root-cause localization</span>
     <div class="excerpt">A real incident from the OpenTelemetry Demo, localized to
-    one service out of 88 ranked operations. Duration says every service on the
-    request path is guilty; self time says which one did the work. Every trace is
-    embedded in the page — nothing is fetched.</div>
+    one service out of 87 ranked operations. Duration says every service on the
+    request path is guilty; self time says which one did the work. This one is a
+    report ranger wrote, not the tool running live — every trace is embedded in
+    the page, and nothing is fetched.</div>
   </li>
   <li>
     <a class="title" href="/demos/paladin/">paladin — see what your agent reads</a>
@@ -36,6 +38,23 @@ reimplementation of it. Nothing is uploaded.</p>
     boundary change, with everything held back listed underneath. It runs
     <a href="https://github.com/Grace/warden">warden</a> itself, compiled to
     WebAssembly.</div>
+  </li>
+  <li>
+    <a class="title" href="/demos/genai-interlingua/">genai-interlingua — normalize a GenAI span</a>
+    <span class="date">OpenTelemetry · three pages</span>
+    <div class="excerpt">Six instrumentation libraries spell the same token count
+    six different ways, so nothing about your model calls can be queried as one
+    thing. Paste a span — or pick a real capture — and see it rewritten into one
+    <code>gen_ai.*</code> schema with what the translation cost recorded on the
+    result. Then two pages that go further: the
+    <a href="/demos/genai-interlingua/inspector/">inspector</a> takes one
+    attribute at a time and says which source key produced it, what evidence the
+    reading turned on, and what it could not carry; and
+    <a href="/demos/genai-interlingua/conformance.html">what translation costs</a>
+    draws the measurements across all six libraries — the scoring race that picks
+    a dialect, and where 105 attributes with no home in the conventions end up.
+    <a href="/2026/09/11/there-is-no-model-in-here/">How it works</a>, in
+    pseudocode.</div>
   </li>
 </ul>
 

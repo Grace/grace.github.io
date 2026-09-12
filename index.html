@@ -43,15 +43,16 @@ description: Full-stack engineer — distributed systems, observability, and ML 
 
 <h2>Demos</h2>
 
-<p class="note">Each one is the real Go tool compiled to WebAssembly and running
-in your browser — not a reimplementation. Nothing is uploaded.</p>
+<p class="note">Most of these are the real Go tool compiled to WebAssembly and
+running in your browser — not a reimplementation. The ranger demo is a report
+the Go tool generated, with the incident data embedded. Nothing is uploaded.</p>
 
 <ul class="posts">
   <li>
     <a class="title" href="/demos/ranger/">ranger — find the service that actually broke</a>
     <span class="date">root-cause localization · runs in your browser</span>
     <div class="excerpt">A real incident from the OpenTelemetry Demo, localized to
-    one service out of 88 ranked operations. Every ancestor on the request path
+    one service out of 87 ranked operations. Every ancestor on the request path
     slowed by the same amount; self time is what separates the cause from the
     callers waiting on it.</div>
   </li>
@@ -75,7 +76,10 @@ in your browser — not a reimplementation. Nothing is uploaded.</p>
     <span class="date">OpenTelemetry · runs in your browser</span>
     <div class="excerpt">Paste a span from any of six instrumentation libraries
     and see it normalized into one <code>gen_ai.*</code> schema, with what the
-    translation cost written onto the result.</div>
+    translation cost written onto the result. Also:
+    <a href="/demos/genai-interlingua/inspector/">the inspector</a>, one attribute
+    at a time, and <a href="/demos/genai-interlingua/conformance.html">what
+    translation costs</a> across all six libraries.</div>
   </li>
 </ul>
 
@@ -97,9 +101,10 @@ in your browser — not a reimplementation. Nothing is uploaded.</p>
     <div class="excerpt">Walks the OpenTelemetry trace DAG for the deepest span
     whose deviation from baseline its children do not explain — the measurement
     that separates the service that broke from every caller waiting on it.
-    Deterministic, and pre-alpha honestly: top-1 of 25% against four labeled
-    failures out of 88 ranked operations, with the confound that makes that a
-    floor published alongside it.</div>
+    Deterministic, and pre-alpha honestly: top-1 of 38% against thirteen labeled
+    incidents — eight distinct failures, five of them run twice — ranking roughly
+    ninety operations per window, with the confound that makes that a floor
+    published alongside it.</div>
   </li>
   <li>
     <a class="title" href="https://github.com/Grace/paladin">paladin</a>
