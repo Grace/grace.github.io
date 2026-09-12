@@ -11,30 +11,73 @@ let ready = false;
 // --- what warden held back -------------------------------------------------
 // The projection tells you what crossed. Diffing it against the internal
 // projection tells you what didn't, which is the part worth seeing.
-function heldBack(contract, trace, audience) {
-  if (audience === "internal") return [];
-  const rank = { public: 0, partner: 1, internal: 2 };
-  const out = [];
-  for (const f of trace.firings ?? []) {
-    const rule = contract.rules?.[f.rule];
-    if (!rule) continue;
-    if (rank[rule.audience ?? "internal"] > rank[audience]) {
-      out.push({ rule: f.rule, what: `the whole <code>${rule.reason_code}</code> reason`,
-                 needs: rule.audience ?? "internal", why: "the reason itself is above this tier" });
-      continue;
-    }
-    for (const [engine, spec] of Object.entries(rule.facts ?? {})) {
-      if (!(engine in (f.facts ?? {}))) continue;
-      if (rank[spec.audience ?? "internal"] > rank[audience]) {
-        out.push({ rule: f.rule,
-                   what: `<code>${spec.as}</code> = <code>${f.facts[engine]}</code>`,
-                   needs: spec.audience ?? "internal",
-                   why: `the engine calls this <code>${engine}</code>` });
-      }
+//
+// This asks the engine rather than re-deciding in JavaScript. An earlier
+// version of this function carried its own tier table and walked rule.facts,
+// which meant it could not see a withheld *parameter* at all: the contract
+// schema grew a second term set and this table silently kept reporting one of
+// them. Projecting at each tier and diffing is the only version of this that
+// cannot drift from what warden actually publishes.
+const TIERS = ["public", "partner", "internal"];
+
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function projectAt(contract, trace, audience) {
+  const r = wardenProject(JSON.stringify(contract), JSON.stringify(trace), audience);
+  if (!r.ok) return null;
+  try { return JSON.parse(r.decision); } catch (e) { return null; }
+}
+
+// One addressable entry per published thing, so two projections can be diffed
+// by key. Facts and parameters both arrive under `facts` — the engine has
+// already merged them by the time it publishes, which is exactly why reading
+// its output beats re-deriving from the contract.
+function termsOf(decision) {
+  const out = new Map();
+  if (!decision) return out;
+  for (const reason of decision.reasons ?? []) {
+    out.set(`reason:${reason.code}`, { kind: "reason", code: reason.code });
+    for (const [as, value] of Object.entries(reason.facts ?? {})) {
+      out.set(`term:${reason.code}:${as}`, { kind: "term", code: reason.code, as, value });
     }
   }
-  if (trace.ruleset) out.push({ rule: "—", what: `<code>ruleset</code> = <code>${trace.ruleset}</code>`, needs: "internal", why: "engine identity" });
-  if (trace.version) out.push({ rule: "—", what: `<code>version</code> = <code>${trace.version}</code>`, needs: "internal", why: "ruleset version" });
+  for (const key of ["ruleset", "version"]) {
+    if (decision[key] !== undefined) {
+      out.set(`meta:${key}`, { kind: "meta", as: key, value: decision[key] });
+    }
+  }
+  return out;
+}
+
+function heldBack(contract, trace, audience) {
+  const byTier = new Map(TIERS.map((t) => [t, termsOf(projectAt(contract, trace, t))]));
+  const full = byTier.get("internal");
+  const mine = byTier.get(audience) ?? new Map();
+  if (!full || !full.size) return [];
+
+  // A reason withheld whole takes its terms with it; listing both would report
+  // the same withholding several times.
+  const mutedReasons = new Set();
+  for (const [id, t] of full) {
+    if (t.kind === "reason" && !mine.has(id)) mutedReasons.add(t.code);
+  }
+
+  const out = [];
+  for (const [id, t] of full) {
+    if (mine.has(id)) continue;
+    if (t.kind === "term" && mutedReasons.has(t.code)) continue;
+    const needs = TIERS.find((tier) => byTier.get(tier).has(id)) ?? "internal";
+    out.push({
+      rule: t.kind === "meta" ? "—" : esc(t.code),
+      what: t.kind === "reason"
+        ? `the whole <code>${esc(t.code)}</code> reason`
+        : `<code>${esc(t.as)}</code> = <code>${esc(t.value)}</code>`,
+      needs,
+      why: t.kind === "reason" ? "the reason itself is above this tier"
+        : t.kind === "meta" ? (t.as === "ruleset" ? "engine identity" : "ruleset version")
+          : `the engine publishes this no lower than <code>${needs}</code>`,
+    });
+  }
   return out;
 }
 

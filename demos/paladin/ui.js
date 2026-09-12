@@ -14,9 +14,10 @@ const $status = document.getElementById("status");
 let ready = false;
 
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-const KIND = { invisible: "invisible", bidi: "bidi control", "bidi-control": "bidi control",
+// Keys are the kind strings risk.go emits, exactly. Anything else is dead.
+const KIND = { invisible: "invisible", "bidi-control": "bidi control",
                homoglyph: "homoglyph", control: "control", format: "format",
-               "private-use": "private use", privateUse: "private use" };
+               "private-use": "private use" };
 
 function render(text) {
   if (!ready) { $out.textContent = "loading paladin…"; return; }

@@ -32,10 +32,14 @@ title: "paladin — see what your agent reads"
     font-size: .68rem; font-weight: 700; letter-spacing: .02em;
     vertical-align: baseline; white-space: nowrap; color: #12141a;
   }
-  .k-invisible  { background: #ffd166; }
-  .k-bidi       { background: #ff8fa3; }
-  .k-homoglyph  { background: #8ecae6; }
-  .k-control, .k-format, .k-privateUse { background: #c9b6f5; }
+  /* These selectors must match the kind strings paladin's Go emits, with
+     non-[a-z] stripped: bidi-control becomes k-bidicontrol, private-use
+     becomes k-privateuse. Spell them any other way and the chip renders with
+     no background — which, in dark mode, is invisible text on a dark ground. */
+  .k-invisible    { background: #ffd166; }
+  .k-bidicontrol  { background: #ff8fa3; }
+  .k-homoglyph    { background: #8ecae6; }
+  .k-control, .k-format, .k-privateuse { background: #c9b6f5; }
 
   .verdict { margin: 1.5rem 0 .5rem; font-size: 1.0625rem; font-weight: 650; }
   .verdict.clean { color: #2d7a4f; }
