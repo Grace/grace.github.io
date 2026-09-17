@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LLM Observability with Honeycomb - Bring Your Own LangChain LLM</title>
+<meta name="description" content="Eight problems that show up when grades from an outside eval tool arrive after the trace has already been sent, and the simplest thing that solved each one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Roboto+Mono:wght@400;500&family=Roboto:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+  /* Palette from honeycomb.io site CSS tokens, as captured in proposal/mockup.html (2026-09-17). */
+  :root {
+    --paper: #ffffff;
+    --wash: #f5f7fa;
+    --ink: #25303e;
+    --muted: #59606d;
+    --faint: #717a89;
+    --rule: #dee3ec;
+    --link: #0078cd;
+    --coral: #e65b53;
+    --honey: #ffbc04;
+    --code-bg: #ebeff4;
+    --sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Poppins", var(--sans);
+    --mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #151c25;
+      --wash: #1b232e;
+      --ink: #e7ecf2;
+      --muted: #adb7c4;
+      --faint: #8d97a5;
+      --rule: #2c3745;
+      --link: #63b3f2;
+      --coral: #ff8a80;
+      --code-bg: #212a36;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #151c25; --wash: #1b232e; --ink: #e7ecf2; --muted: #adb7c4; --faint: #8d97a5;
+    --rule: #2c3745; --link: #63b3f2; --coral: #ff8a80; --code-bg: #212a36;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 18px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 720px; margin: 0 auto; padding: 56px 16px 96px; }
+  @media (min-width: 800px) { .page { padding: 72px 24px 120px; } }
+
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 3px; border-radius: 2px; }
+  code {
+    font-family: var(--mono); font-size: .86em; background: var(--code-bg);
+    padding: 1px 5px; border-radius: 3px; word-break: break-word;
+  }
+
+  h1 {
+    font-family: var(--display); font-weight: 600; font-size: clamp(29px, 4.6vw, 38px);
+    line-height: 1.2; letter-spacing: -.015em; margin: 0 0 16px; max-width: 26ch;
+  }
+  .dek { font-size: 20px; line-height: 1.5; color: var(--muted); margin: 0 0 28px; max-width: 60ch; }
+  .byline {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+    font-size: 15px; color: var(--faint); padding-bottom: 20px; border-bottom: 1px solid var(--rule);
+    margin-bottom: 32px;
+  }
+  .byline .who { color: var(--ink); font-weight: 500; }
+  .topic {
+    font-size: 13px; color: var(--link); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 2px 10px;
+  }
+
+  h2 {
+    font-family: var(--display); font-weight: 600; font-size: 25px; line-height: 1.3;
+    letter-spacing: -.01em; margin: 44px 0 4px; position: relative; padding-left: 26px;
+  }
+  h2::before {
+    content: ""; position: absolute; left: 0; top: .42em; width: 13px; height: 15px;
+    background: var(--honey);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  }
+  p { margin: 0 0 18px; max-width: 68ch; }
+  ul, ol { max-width: 68ch; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 500; }
+
+  .status { font-size: 15px; color: var(--faint); margin: 0 0 16px; padding-left: 26px; font-style: italic; }
+  .status.open { color: var(--coral); font-style: normal; font-weight: 500; }
+
+  .evidence {
+    border-left: 3px solid var(--rule); background: var(--wash);
+    padding: 14px 18px; margin: 0 0 18px; font-size: 16.5px; color: var(--muted);
+    max-width: 68ch;
+  }
+  .evidence p { margin: 0 0 10px; }
+  .evidence p:last-child { margin: 0; }
+  .evidence .lead { color: var(--ink); font-weight: 500; }
+
+  .terms { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin: 0 0 32px; padding: 0; }
+  .term { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 14px 0; border-top: 1px solid var(--rule); }
+  .term:first-child { border-top: 0; }
+  @media (min-width: 640px) { .term { grid-template-columns: 112px 1fr; gap: 16px; } }
+  .term dt { font-family: var(--display); font-weight: 500; font-size: 16px; }
+  .term dd { margin: 0; color: var(--muted); font-size: 16.5px; }
+
+  .kicker { font-family: var(--display); font-weight: 500; font-size: 19px; margin: 0 0 18px; }
+
+  footer.end {
+    margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule);
+    font-size: 15.5px; color: var(--faint); max-width: 68ch;
+  }
+</style>
+</head>
+<body>
+<article class="page">
+
+  <h1>LLM Observability with Honeycomb - Bring Your Own LangChain LLM</h1>
+
+  <p class="dek">Your evals live in LangSmith. Your traces live in Honeycomb. Nobody should have to
+  re-instrument their app to put those two facts in the same place, so I spent a week finding out what
+  it actually takes.</p>
+
+  <div class="byline">
+    <span class="who">Grace</span>
+    <span>17 September 2026</span>
+    <span class="topic">Evals</span>
+    <span class="topic">OpenTelemetry</span>
+  </div>
+
+  <p>Every team shipping on LLMs is already grading its output. A judge model scores answers, a
+  reviewer works an annotation queue, a regex checks a schema, a user clicks thumbs down. Those grades
+  pile up in LangSmith or Braintrust or, let's be honest, a spreadsheet. And not one of them is where
+  you go at 2am when the thing is misbehaving.</p>
+
+  <p>The industry's answer to this is to tell customers to re-instrument against the GenAI semantic
+  conventions first, and <em>then</em> they get value. That's backwards. It puts the entire cost up
+  front and the payoff somewhere over the horizon, which is exactly why these integrations stall at
+  the proof-of-concept stage and quietly die.</p>
+
+  <p>So I tried it the other way round: take the grades in whatever shape they already have, and add
+  only the two things that make them usable. Which operation the grade is about, and what the score
+  means. Here's what broke, what fixed it, and the two problems I couldn't solve.</p>
+
+  <p>Three words do a lot of work below.</p>
+
+  <dl class="terms">
+    <div class="term">
+      <dt>Operation</dt>
+      <dd>One run of the thing you're watching. Here, one agent answering one question. Its record is
+      a span.</dd>
+    </div>
+    <div class="term">
+      <dt>Grade</dt>
+      <dd>One opinion about that answer: a name (<code>correctness</code>), a score or label
+      (<code>true</code>), and usually an explanation. The grader might be a judge model, a person, a
+      code check or an annoyed user. LangSmith stores all four and calls them feedback.</dd>
+    </div>
+    <div class="term">
+      <dt>Late</dt>
+      <dd>The grade shows up after the operation's span has ended and shipped, so it can't be added to
+      that span. Nothing to do with being slow.</dd>
+    </div>
+  </dl>
+
+  <h2>Which operation is this grade about?</h2>
+  <p class="status">Solved, and it's the piece I'd keep</p>
+  <p>The two systems share no identifier. LangSmith has a run UUID, Honeycomb has a trace and span ID,
+  and absolutely nothing connects them. My first working version had me pasting IDs in by hand. Great
+  for a demo, useless for a customer.</p>
+  <p>The fix is much smaller than the problem sounds. Ask the eval tool for a run ID <em>before</em> the
+  run starts, and set it on the operation span as an attribute when the span opens. Now both systems
+  agree on one value, and one filter gets you the operation and every grade about it. If you're already
+  exporting LangSmith traces over OpenTelemetry you don't even need that much: metadata you set on a
+  run turns up in Honeycomb as <code>langsmith.metadata.&lt;key&gt;</code>, and the key rides along for
+  free.</p>
+  <div class="evidence">
+    <p class="lead">What I checked</p>
+    <p>Stamping <code>byoe.langsmith.run_id</code> works, offline and in Honeycomb. The metadata path is
+    offline-tested only. Child runs inherit the metadata, so a query wants the root span.</p>
+    <p>Here's what you must not do. LangSmith derives an eight-byte span ID from the front of its run
+    UUID, and those UUIDs are time-ordered. Five thousand runs created back to back gave me four
+    distinct IDs. Four. Build your join on that and it will collide silently, in production, on the
+    traffic that matters most.</p>
+  </div>
+
+  <h2>A span that has ended can't be told anything</h2>
+  <p class="status">Solved, and the spec agrees</p>
+  <p>Everyone's first instinct is to hang the grade on the operation it judges. You can't. Once a span
+  has ended and shipped, the API won't let you touch it and nothing downstream is going to merge it for
+  you. That's not a Honeycomb limitation, that's how tracing works, and it's the single fact that
+  shapes this entire problem.</p>
+  <p>So the grade becomes its own record: a span link pointing at the operation, and the operation's
+  trace and span IDs copied onto it as plain attributes. The link is for humans navigating. The
+  attributes are what you query, because a link arrives as its own row with none of the grade's columns
+  on it.</p>
+  <div class="evidence">
+    <p class="lead">What I checked</p>
+    <p>OpenTelemetry defines span events as points during a span's own duration, and links for
+    asynchronous follow-on work. This is the documented pattern, not a hack I invented to get around
+    something.</p>
+    <p>One thing I'd watch: the span events API is deprecated in favour of log-based events, and a log
+    record can carry a finished span's trace context. That's where I'd build next. Whether Honeycomb
+    renders such a record next to the span is the very first thing I'd test, because I don't know.</p>
+  </div>
+
+  <h2>Your field names are fine. Teach them to the agent.</h2>
+  <p class="status">Solved with the product as it ships today</p>
+  <p>Here's the part that changed how I think about this whole problem. The pitch for adopting shared
+  conventions is that otherwise nothing downstream can understand your data. That was true right up
+  until the thing reading your data became an agent that can be handed a glossary.</p>
+  <p>Honeycomb's team telemetry schema does exactly that, and it's been sitting there the whole time.
+  Paste a Weaver-format YAML describing your own attributes into Team Settings, and the MCP tools hand
+  those descriptions to whatever agent is investigating. No data moves. No names change. An agent
+  reading the dataset now knows that <code>byoe.target_mapping=user-supplied</code> means nobody
+  verified it, which is the kind of thing that never survives a migration into a shared schema anyway.</p>
+  <div class="evidence">
+    <p class="lead">What I checked</p>
+    <p>I pasted this project's registry. Thirteen <code>byoe.*</code> attributes and the
+    <code>eval.*</code> group come back from the registry as <code>team_custom</code>, right next to
+    OpenTelemetry's own, which already carry <code>gen_ai.evaluation.name</code>,
+    <code>score.value</code>, <code>score.label</code> and <code>explanation</code> at semconv 1.41.0.</p>
+    <p>It fixes meaning, not shape. Comparing one customer's grades against another's still needs a real
+    mapping, and I'm not going to pretend otherwise.</p>
+  </div>
+
+  <h2>One column asked to mean two things</h2>
+  <p class="status">Found the hard way, and still live</p>
+  <p>My judge returned a boolean. LangSmith stored it and handed it back as <code>1.0</code>. That number
+  went to Honeycomb as a double, into a column typed boolean, and came back as <code>true</code>. Every
+  layer behaved exactly as designed.</p>
+  <p>On this record nothing was lost. The judge really had answered <code>true</code>, so the boolean
+  column happened to restore the right meaning. That is the uncomfortable part. Once they land,
+  <code>1.0</code> and <code>true</code> are indistinguishable, so a faithful row and a flattened one
+  look identical. A score of <code>0.5</code> is the one that would not survive, and it has never been
+  sent.</p>
+  <p>This is a semantic bug wearing a formatting bug's clothes, and it's the strongest argument I have
+  for declaring what a score means instead of assuming it. The fix is written and not yet emitted: the
+  score goes in a field per type with the source type recorded beside it, numbers to
+  <code>score.value</code> and categories to <code>score.label</code> the way the convention defines
+  them. The original payload stays untouched either way, which is the only reason this was catchable
+  at all.</p>
+  <div class="evidence">
+    <p class="lead">What I checked</p>
+    <p>Checked 17 September 2026, environment <code>test</code>, dataset
+    <code>byoe-langchain-eval</code>. The judge's own run record holds <code>"score": true</code> for
+    target span <code>ba68aa1035802e37</code>. The imported audit copy of that same judgement holds
+    <code>"score": 1.0</code>. The importer passes the value through on a
+    <code>type(value) in (str, bool, int, float)</code> test with no cast, so a double is what leaves
+    the process. <code>eval.result.score</code> is typed boolean, no <code>eval.result.value</code>
+    column exists yet, and <code>status_code</code> is <code>0</code> on all five rows, so nothing here
+    came from an error.</p>
+    <p>Not checked: whether Honeycomb coerces at ingest or types the column from the data at read. Both
+    explain what I see, and separating them needs a <code>0.5</code> written on purpose.</p>
+  </div>
+  <div class="evidence">
+    <p class="lead">Why this matters past one bug</p>
+    <p>The convention itself warns that a score of 1 means "relevant" in one system and "not relevant"
+    in another. A number with no declared direction isn't a measurement, it's a rumour. A shared column
+    quietly makes it worse.</p>
+  </div>
+
+  <h2>What did the failures have in common?</h2>
+  <p class="status open">Not solved, and it's the question that actually matters</p>
+  <p>This is what anyone actually wants. Bad grades in one group, good ones in another, BubbleUp telling
+  you what separates them. My design can't answer it, and I'd rather say that plainly than demo around
+  it.</p>
+  <p>BubbleUp compares fields on the events you selected. Relational fields reach across one trace, not
+  two. My grades sit in their own trace carrying nothing but a score, so there's nothing to compare. The
+  fix is to copy an allowlist of the operation's context onto the grade as it's written: model, prompt
+  version, retrieved document count, cost. That's a snapshot, and snapshots drift. I'd rather make that
+  trade deliberately than discover it during an incident.</p>
+  <div class="evidence">
+    <p class="lead">Why it's still unproven</p>
+    <p>Every grade in my dataset passed. All of them. With nothing failing there's nothing to contrast,
+    and any demo I built on it would be theatre. It needs a batch with real failures in it.</p>
+    <p>A practical trap while you're here: link rows and span events live in the same dataset, so any
+    count of grades wants <code>meta.annotation_type does-not-exist</code> or your baseline fills up
+    with rows that aren't grades.</p>
+  </div>
+
+  <h2>What did a correct answer cost?</h2>
+  <p class="status open">Half solved</p>
+  <p>Cost per correct answer is the number that makes any of this worth wiring into observability. It
+  breaks on something far dumber than arithmetic: the model you asked for is not the model that
+  answered.</p>
+  <p>Across 289 calls my logs asked for <code>moonshotai/Kimi-K3</code> and were served
+  <code>accounts/fireworks/models/kimi-k3</code>. Only the served name has a price. My price table
+  listed only the requested one, so every experiment had been quietly reporting cost as unknown and I
+  hadn't noticed. Price the served model, freeze the number on the record, and write down which price
+  table and version produced it.</p>
+  <div class="evidence">
+    <p class="lead">What I checked</p>
+    <p>The token counts are real, read from each response's own usage metadata across 60 calls with no
+    errors. The money is not: $0.73 is those counts against Fireworks' published price, not a number
+    anyone billed me. Passing a deliberately wrong provider returned no price at all rather than the
+    wrong price, which is the behaviour you want.</p>
+    <p>That gap is the whole point. A computed cost has to carry its price table and version, and the
+    customer's own cost field beats it every time, because published prices don't know what they
+    negotiated.</p>
+  </div>
+
+  <h2>The same grade, twice, with different IDs</h2>
+  <p class="status open">Designed, not proven</p>
+  <p>One judgement reached Honeycomb twice: once from the process that ran the judge, once imported from
+  LangSmith. A naive count says two grades. Worse, the two copies don't even agree on the score's type.</p>
+  <p>Identifiers aren't stable either. LangSmith's migration tool re-mints run IDs, issues new feedback
+  IDs, shifts experiment timestamps, and doesn't migrate feedback attached to production traces at all.
+  So deduplicating on the feedback ID works right up until a customer moves instances, which is a
+  terrible time to find out.</p>
+  <div class="evidence">
+    <p class="lead">What I'd do</p>
+    <p>Identify a judgement by run, evaluation name and rationale rather than by its score, and keep the
+    source instance and lineage on the mapping record. A duplicate delivery is then one grade, and a
+    migrated record is still the same grade.</p>
+  </div>
+
+  <h2>How would you know any of this is trustworthy?</h2>
+  <p class="status">The habit, more than the code</p>
+  <p>Integration write-ups love to claim the top rung of a ladder they climbed two steps of. There are
+  five separate claims hiding in "it works": the record was exported, Honeycomb received it, you can
+  find the operation from the grade, you can navigate between them, and the grade shows up on the
+  operation itself. Each one needs its own evidence.</p>
+  <p>A flush returning true proves the first and nothing else. I have the first three, for one target,
+  by querying the records back by ID. Four and five are unchecked. There are a lot of unknowns here, and
+  I'd rather hand you the list than let a screenshot imply I've closed it.</p>
+  <div class="evidence">
+    <p class="lead">Checked</p>
+    <p>One filter on the operation's span ID returns both grades and nothing else. The attribute
+    descriptions resolve as <code>team_custom</code>. The offline suite is 59 tests, no network.</p>
+    <p class="lead">Not checked</p>
+    <p>Clicking through in the UI, whether a late grade renders on the operation, and whether a single
+    customer actually wants this.</p>
+  </div>
+
+  <h2>What I deliberately didn't build</h2>
+  <ul>
+    <li>A rule that customers adopt the GenAI conventions before Honeycomb is useful to them.</li>
+    <li>A translation that drops or overwrites the fields they sent.</li>
+    <li>A failing grade recorded as a span error. The judge worked. The answer was wrong. Those are
+    different events and conflating them poisons your error rate.</li>
+    <li>Field mappings decided by embedding similarity. Opposites sit close together in that space, and
+    the distances move when the model changes.</li>
+    <li>An LLM anywhere in the write path. Queries produce the numbers. The model explains them.</li>
+    <li>A knowledge graph, until lineage questions are a real workload instead of a possibility.</li>
+    <li>A conformance percentage for any library. There's no honest denominator, and it turns "not
+    observed" into "not done".</li>
+  </ul>
+
+  <h2>The four experiments I'd run next</h2>
+  <p class="kicker">Every one of them is small, and every one can come back negative.</p>
+  <ol>
+    <li>Open an existing trace and look. Does the operation show anything about the grades pointing at
+    it, and can you click from a grade to its target? Costs nothing and settles the navigation question
+    today.</li>
+    <li>Send one log-based <code>gen_ai.evaluation.result</code> record carrying a finished span's trace
+    context and see whether Honeycomb puts it beside that span. Two spans, one query.</li>
+    <li>Seed a batch with planted failures and operation context, then run BubbleUp. Pass criteria
+    written first: the planted factor ranked top, rates within five points, and a correct refusal when
+    there's nothing to compare.</li>
+    <li>Ask three teams who already grade their LLM output whether they start from one bad trace or from
+    a chart of scores. That answer changes what's worth building, and no amount of code substitutes for
+    it.</li>
+  </ol>
+
+  <p>None of this is exotic. It's the same discipline the rest of observability already runs on: keep
+  the customer's data in the customer's shape, say what you actually verified, and put the meaning
+  somewhere a person or an agent can read it later. Evals are just another kind of telemetry that shows
+  up late and means something specific. We should treat them that way.</p>
+
+  <footer class="end">
+    Written from execution notes. Where I haven't said I checked something, I haven't checked it.
+  </footer>
+
+</article>
+</body>
+</html>
