@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where genai-interlingua sits — architecture</title>
+<meta name="description" content="Where genai-interlingua runs: as a Collector processor, as a CLI beside the pipeline, or as config text executed by a Collector that never heard of it. With the type model and the reason one decision serves all three.">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  /* Diagram tokens mapped onto the site palette. The SVGs use currentColor for
+     anything that must follow the text, so both themes work from these three. */
+  :root {
+    --panel: var(--code-bg);
+    --mark: #a8452f;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --mark: #e9927f; }
+  }
+
+  body { max-width: 52rem; }
+  .nav { font: 400 13.5px/1.4 var(--sans); color: var(--muted); margin: 0 0 2rem; }
+
+  figure { margin: 2rem 0 2.25rem; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { color: var(--muted); font-size: 0.9375rem; margin-top: 0.85rem; }
+
+  .note {
+    border-left: 2px solid var(--rule); padding-left: 1rem;
+    color: var(--muted); font-size: 0.9375rem; margin: 1.5rem 0;
+  }
+  .note strong { color: var(--fg); font-weight: 600; }
+
+  footer.end {
+    margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: 0.9375rem;
+  }
+</style>
+</head>
+<body>
+
+<p class="nav"><a href="/demos/genai-interlingua/">genai-interlingua</a> &nbsp;/&nbsp; architecture</p>
+
+<h1>Where genai-interlingua sits</h1>
+
+<p class="subtitle">It is a Collector processor, a CLI, and a config generator for two processors that
+ship with the stock Collector. Those are three different answers to "where in the pipeline", and the
+design exists to make all three the same decision.</p>
+
+<h2>Three places it can run</h2>
+
+<p>The interesting part is the third one. <code>-emit ottl</code> prints a transform config and
+<code>-emit schema-file</code> prints a Telemetry Schema File, so the mapping can run inside a
+Collector that never heard of this binary.</p>
+
+<figure>
+  <svg viewBox="0 0 740 340" role="img" aria-label="Three deployment positions: as a Collector processor in the path, as a standalone CLI beside the path, and as a config generator whose output runs inside the stock Collector.">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0,1 10,5 0,9" fill="currentColor"></polygon>
+      </marker>
+    </defs>
+
+    <text x="0" y="16" font-size="13" font-weight="600" fill="currentColor" style="font-family:var(--sans)">A &#160;In the path</text>
+    <rect x="0" y="28" width="104" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="52" y="46" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">app + SDK</text>
+    <text x="52" y="62" text-anchor="middle" font-size="11" style="font-family:var(--mono);fill:var(--muted)">any dialect</text>
+
+    <rect x="164" y="20" width="330" height="60" rx="3" stroke="currentColor" stroke-width="1" style="fill:var(--panel)"></rect>
+    <text x="174" y="36" font-size="10.5" letter-spacing="0.8" style="font-family:var(--mono);fill:var(--muted)">CUSTOM COLLECTOR BUILD</text>
+    <text x="196" y="62" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">receiver</text>
+    <rect x="240" y="46" width="132" height="24" rx="3" stroke-width="1.5" style="fill:var(--bg);stroke:var(--mark)"></rect>
+    <text x="306" y="62" text-anchor="middle" font-size="11" style="font-family:var(--mono);fill:var(--mark)">genaiinterlingua</text>
+    <text x="440" y="62" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">exporter</text>
+
+    <rect x="556" y="28" width="104" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="608" y="55" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">Honeycomb</text>
+
+    <line x1="106" y1="50" x2="160" y2="50" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+    <text x="133" y="42" text-anchor="middle" font-size="10" style="font-family:var(--mono);fill:var(--muted)">OTLP</text>
+    <line x1="496" y1="50" x2="552" y2="50" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+    <line x1="230" y1="58" x2="236" y2="58" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+    <line x1="376" y1="58" x2="404" y2="58" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+
+    <text x="0" y="132" font-size="13" font-weight="600" fill="currentColor" style="font-family:var(--sans)">B &#160;Beside the path</text>
+    <rect x="0" y="144" width="104" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="52" y="164" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">OTLP JSON</text>
+    <text x="52" y="179" text-anchor="middle" font-size="11" style="font-family:var(--mono);fill:var(--muted)">captured</text>
+
+    <rect x="164" y="144" width="150" height="44" rx="3" stroke-width="1.5" style="fill:var(--bg);stroke:var(--mark)"></rect>
+    <text x="239" y="171" text-anchor="middle" font-size="11" style="font-family:var(--mono);fill:var(--mark)">interlingua CLI</text>
+
+    <rect x="374" y="144" width="150" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="449" y="164" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">normalized JSON</text>
+    <text x="449" y="179" text-anchor="middle" font-size="11" style="font-family:var(--mono);fill:var(--muted)">+ interlingua.*</text>
+
+    <line x1="106" y1="166" x2="160" y2="166" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+    <line x1="316" y1="166" x2="370" y2="166" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+    <text x="596" y="163" text-anchor="middle" font-size="12" style="font-family:var(--sans);fill:var(--muted)">fixtures, replay,</text>
+    <text x="596" y="179" text-anchor="middle" font-size="12" style="font-family:var(--sans);fill:var(--muted)">conformance tests</text>
+    <line x1="526" y1="166" x2="540" y2="166" stroke-width="1" marker-end="url(#ar)" style="stroke:var(--muted)"></line>
+
+    <text x="0" y="248" font-size="13" font-weight="600" fill="currentColor" style="font-family:var(--sans)">C &#160;Not in the path at all</text>
+    <rect x="0" y="260" width="150" height="44" rx="3" stroke-width="1.5" style="fill:var(--bg);stroke:var(--mark)"></rect>
+    <text x="75" y="281" text-anchor="middle" font-size="11" style="font-family:var(--mono);fill:var(--mark)">interlingua -emit</text>
+    <text x="75" y="296" text-anchor="middle" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">ottl | schema-file</text>
+
+    <rect x="210" y="260" width="120" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3"></rect>
+    <text x="270" y="287" text-anchor="middle" font-size="12" fill="currentColor" style="font-family:var(--sans)">config text</text>
+
+    <rect x="390" y="252" width="270" height="60" rx="3" stroke="currentColor" stroke-width="1" style="fill:var(--panel)"></rect>
+    <text x="400" y="268" font-size="10.5" letter-spacing="0.8" style="font-family:var(--mono);fill:var(--muted)">STOCK otelcol-contrib</text>
+    <text x="525" y="294" text-anchor="middle" font-size="11" fill="currentColor" style="font-family:var(--mono)">transform | schema processor</text>
+
+    <line x1="152" y1="282" x2="206" y2="282" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"></line>
+    <line x1="332" y1="282" x2="386" y2="282" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ar)"></line>
+    <text x="359" y="274" text-anchor="middle" font-size="10" style="font-family:var(--mono);fill:var(--muted)">loaded by</text>
+
+    <text x="0" y="330" font-size="12.5" style="font-family:var(--sans);fill:var(--muted)">The marked boxes are this repository's code. In row C none of it runs in production.</text>
+  </svg>
+  <figcaption>The mapping travels even when the binary does not. Row C is why "you would have to run
+  my fork of the Collector" is not an objection: the OTTL config runs in the Collector the customer
+  already has.</figcaption>
+</figure>
+
+<h2>The type model</h2>
+
+<p>Six dialects implement one three-method interface. A dialect scores a span before it is allowed to
+parse it, and the comment on <code>Score</code> is the design rule: <em>detection is a claim of
+responsibility, not a guess.</em></p>
+
+<figure>
+  <svg viewBox="0 0 740 400" role="img" aria-label="UML class diagram: the Dialect interface with Name, Score and Parse, realized by six dialects, taking a Span and producing a Parsed value with Loss records.">
+    <defs>
+      <marker id="tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse">
+        <polygon points="0,0 12,6 0,12" stroke="currentColor" stroke-width="1.2" style="fill:var(--bg)"></polygon>
+      </marker>
+      <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0,1 10,5 0,9" fill="currentColor"></polygon>
+      </marker>
+    </defs>
+
+    <rect x="250" y="0" width="240" height="96" rx="3" stroke="currentColor" stroke-width="1.4" style="fill:var(--panel)"></rect>
+    <text x="370" y="20" text-anchor="middle" font-size="10.5" letter-spacing="0.8" style="font-family:var(--mono);fill:var(--muted)">&#171;interface&#187;</text>
+    <text x="370" y="38" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor" style="font-family:var(--sans)">Dialect</text>
+    <line x1="250" y1="46" x2="490" y2="46" stroke="currentColor" stroke-width="1"></line>
+    <text x="262" y="62" font-size="11.5" fill="currentColor" style="font-family:var(--mono)">+ Name() Name</text>
+    <text x="262" y="78" font-size="11.5" fill="currentColor" style="font-family:var(--mono)">+ Score(Span) int</text>
+    <text x="262" y="92" font-size="11.5" fill="currentColor" style="font-family:var(--mono)">+ Parse(Span) Parsed</text>
+
+    <line x1="370" y1="150" x2="370" y2="100" stroke="currentColor" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#tri)"></line>
+    <line x1="70" y1="150" x2="670" y2="150" stroke="currentColor" stroke-width="1"></line>
+    <text x="386" y="122" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">implements</text>
+
+    <g font-size="11" fill="currentColor" text-anchor="middle" style="font-family:var(--mono)">
+      <line x1="70" y1="150" x2="70" y2="168" stroke="currentColor" stroke-width="1"></line>
+      <rect x="14" y="168" width="112" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+      <text x="70" y="188">openllmetry</text>
+
+      <line x1="190" y1="150" x2="190" y2="168" stroke="currentColor" stroke-width="1"></line>
+      <rect x="134" y="168" width="112" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+      <text x="190" y="188">openinference</text>
+
+      <line x1="310" y1="150" x2="310" y2="168" stroke="currentColor" stroke-width="1"></line>
+      <rect x="254" y="168" width="112" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+      <text x="310" y="188">vercel</text>
+
+      <line x1="430" y1="150" x2="430" y2="168" stroke="currentColor" stroke-width="1"></line>
+      <rect x="374" y="168" width="112" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+      <text x="430" y="188">litellm</text>
+
+      <line x1="550" y1="150" x2="550" y2="168" stroke="currentColor" stroke-width="1"></line>
+      <rect x="494" y="168" width="112" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+      <text x="550" y="188">braintrust</text>
+
+      <line x1="670" y1="150" x2="670" y2="168" stroke="currentColor" stroke-width="1"></line>
+      <rect x="614" y="168" width="112" height="30" rx="3" fill="none" stroke-width="1.4" style="stroke:var(--mark)"></rect>
+      <text x="670" y="184" style="fill:var(--mark)">raw</text>
+      <text x="670" y="196" font-size="9.5" style="fill:var(--muted)">&#171;fallback&#187;</text>
+    </g>
+
+    <rect x="14" y="250" width="200" height="110" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="114" y="270" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor" style="font-family:var(--sans)">Span</text>
+    <line x1="14" y1="278" x2="214" y2="278" stroke="currentColor" stroke-width="1"></line>
+    <text x="26" y="296" font-size="11" fill="currentColor" style="font-family:var(--mono)">Attrs map[string]Value</text>
+    <text x="26" y="312" font-size="11" fill="currentColor" style="font-family:var(--mono)">Name string</text>
+    <text x="26" y="336" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">what the emitter wrote,</text>
+    <text x="26" y="350" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">read-only</text>
+
+    <rect x="290" y="250" width="200" height="110" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="390" y="270" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor" style="font-family:var(--sans)">Parsed</text>
+    <line x1="290" y1="278" x2="490" y2="278" stroke="currentColor" stroke-width="1"></line>
+    <text x="302" y="296" font-size="11" fill="currentColor" style="font-family:var(--mono)">Usage, Messages,</text>
+    <text x="302" y="312" font-size="11" fill="currentColor" style="font-family:var(--mono)">Origin, Accounting</text>
+    <text x="302" y="330" font-size="11" fill="currentColor" style="font-family:var(--mono)">Lossy []Loss</text>
+    <text x="302" y="350" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">logical fields, not keys</text>
+
+    <rect x="566" y="250" width="160" height="110" rx="3" fill="none" stroke-width="1.4" style="stroke:var(--mark)"></rect>
+    <text x="646" y="270" text-anchor="middle" font-size="13" font-weight="600" style="font-family:var(--sans);fill:var(--mark)">Loss</text>
+    <line x1="566" y1="278" x2="726" y2="278" stroke-width="1" style="stroke:var(--mark)"></line>
+    <text x="578" y="296" font-size="11" fill="currentColor" style="font-family:var(--mono)">Key string</text>
+    <text x="578" y="312" font-size="11" fill="currentColor" style="font-family:var(--mono)">Reason Reason</text>
+    <text x="578" y="334" font-size="11" style="font-family:var(--sans);fill:var(--muted)">no_field, unstructured,</text>
+    <text x="578" y="348" font-size="11" style="font-family:var(--sans);fill:var(--muted)">flattened, ambiguous</text>
+
+    <line x1="114" y1="246" x2="114" y2="206" stroke="currentColor" stroke-width="1" marker-end="url(#ar2)"></line>
+    <text x="126" y="228" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">Score / Parse read</text>
+    <line x1="390" y1="206" x2="390" y2="246" stroke="currentColor" stroke-width="1" marker-end="url(#ar2)"></line>
+    <text x="402" y="228" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">Parse returns</text>
+    <line x1="494" y1="305" x2="562" y2="305" stroke-width="1" marker-end="url(#ar2)" style="stroke:var(--mark)"></line>
+    <text x="528" y="298" text-anchor="middle" font-size="10" style="font-family:var(--mono);fill:var(--muted)">0..n</text>
+  </svg>
+  <figcaption>Adding a dialect is one file: it registers itself from its own <code>init</code>, so
+  nothing central needs editing. <code>raw</code> is marked a fallback so it is only consulted when
+  no dialect claims the span, which keeps it from eating the winner's confidence margin.</figcaption>
+</figure>
+
+<h2>Why one decision serves three deployments</h2>
+
+<p><code>normalize.Span</code> does not mutate anything. It returns a <strong>description of an
+edit</strong>, and the caller applies it to whatever representation it happens to be holding. That is
+the hinge the whole design turns on.</p>
+
+<figure>
+  <svg viewBox="0 0 740 330" role="img" aria-label="Flow diagram: a Span plus Options produce a Result describing attributes to set and remove, which three different callers apply to pdata, to OTLP JSON, or render as OTTL and schema-file text.">
+    <defs>
+      <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0,1 10,5 0,9" fill="currentColor"></polygon>
+      </marker>
+    </defs>
+
+    <rect x="0" y="34" width="150" height="56" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="75" y="58" text-anchor="middle" font-size="11.5" fill="currentColor" style="font-family:var(--mono)">dialect.Span</text>
+    <text x="75" y="76" text-anchor="middle" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">one span, as sent</text>
+
+    <rect x="0" y="118" width="150" height="70" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="75" y="140" text-anchor="middle" font-size="11.5" fill="currentColor" style="font-family:var(--mono)">Options</text>
+    <text x="75" y="158" text-anchor="middle" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">Target: 1.41.0 | main</text>
+    <text x="75" y="174" text-anchor="middle" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">keep | dedupe | prune</text>
+
+    <rect x="230" y="34" width="210" height="154" rx="3" stroke-width="1.5" style="fill:var(--panel);stroke:var(--mark)"></rect>
+    <text x="335" y="56" text-anchor="middle" font-size="13" font-weight="600" style="font-family:var(--sans);fill:var(--mark)">Result</text>
+    <line x1="230" y1="64" x2="440" y2="64" stroke-width="1" style="stroke:var(--mark)"></line>
+    <text x="244" y="82" font-size="11" fill="currentColor" style="font-family:var(--mono)">Dialect, Confidence</text>
+    <text x="244" y="100" font-size="11" fill="currentColor" style="font-family:var(--mono)">Set map[string]Value</text>
+    <text x="244" y="118" font-size="11" fill="currentColor" style="font-family:var(--mono)">Remove []string</text>
+    <text x="244" y="136" font-size="11" fill="currentColor" style="font-family:var(--mono)">PriorLossy []string</text>
+    <text x="244" y="154" font-size="11" fill="currentColor" style="font-family:var(--mono)">Sources map[string]string</text>
+    <text x="244" y="176" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">a description, not a mutation</text>
+
+    <line x1="152" y1="62" x2="226" y2="80" stroke="currentColor" stroke-width="1" marker-end="url(#ar3)"></line>
+    <line x1="152" y1="150" x2="226" y2="132" stroke="currentColor" stroke-width="1" marker-end="url(#ar3)"></line>
+    <text x="188" y="112" text-anchor="middle" font-size="10.5" style="font-family:var(--mono);fill:var(--muted)">normalize.Span</text>
+
+    <rect x="530" y="10" width="210" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="546" y="32" font-size="11" fill="currentColor" style="font-family:var(--mono)">collector processor</text>
+    <text x="546" y="50" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">applies it to pdata</text>
+
+    <rect x="530" y="86" width="210" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="546" y="108" font-size="11" fill="currentColor" style="font-family:var(--mono)">CLI</text>
+    <text x="546" y="126" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">applies it to OTLP JSON</text>
+
+    <rect x="530" y="162" width="210" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1"></rect>
+    <text x="546" y="184" font-size="11" fill="currentColor" style="font-family:var(--mono)">emit/ottl, emit/schemafile</text>
+    <text x="546" y="202" font-size="11.5" style="font-family:var(--sans);fill:var(--muted)">renders it as config text</text>
+
+    <line x1="442" y1="90" x2="526" y2="40" stroke="currentColor" stroke-width="1" marker-end="url(#ar3)"></line>
+    <line x1="442" y1="110" x2="526" y2="112" stroke="currentColor" stroke-width="1" marker-end="url(#ar3)"></line>
+    <line x1="442" y1="132" x2="526" y2="186" stroke="currentColor" stroke-width="1" marker-end="url(#ar3)"></line>
+
+    <text x="0" y="248" font-size="12.5" style="font-family:var(--sans);fill:var(--muted)">Three appliers, one decision. A disagreement between them would be a bug, not a configuration difference.</text>
+    <text x="0" y="284" font-size="12.5" style="font-family:var(--sans);fill:var(--muted)">Remove is empty under the default (keep), so the safe mode is also the one you get by forgetting to choose.</text>
+  </svg>
+  <figcaption>Because the decision is data, the same mapping can be unit tested, golden tested,
+  rendered as someone else's config, and applied in two runtimes without a second implementation
+  drifting away from the first.</figcaption>
+</figure>
+
+<h2>What lands on the span</h2>
+
+<table>
+  <thead>
+    <tr><th>Attribute</th><th>What it records</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>interlingua.dialect</code></td><td>Which emitter claimed the span</td></tr>
+    <tr><td><code>interlingua.dialect.confidence</code></td><td>The winner's margin over the runner-up. Zero means a tie, or a fallback that was the only thing left</td></tr>
+    <tr><td><code>interlingua.lossy</code></td><td>The keys this span is no longer a faithful carrier of</td></tr>
+    <tr><td><code>interlingua.lossy.count</code></td><td>Written even when zero, so "nothing was lost" is a fact you can query rather than an absence you have to trust</td></tr>
+    <tr><td><code>interlingua.replaced.&lt;key&gt;</code></td><td>Where a value the emitter stated was changed</td></tr>
+    <tr><td><code>interlingua.hops</code>, <code>.mapping</code></td><td>How many normalizations this span has been through, and by what</td></tr>
+  </tbody>
+</table>
+
+<p class="note"><strong>Read in source, 17 September 2026.</strong>
+<code>internal/dialect/dialect.go</code> (interface, <code>Detect</code>, <code>Scores</code>),
+<code>internal/normalize/normalize.go</code> (<code>Options</code>, <code>Result</code>,
+<code>Span</code>), <code>internal/emit/</code>, <code>processor/genaiinterlingua/</code> (its own Go
+module), <code>cmd/interlingua/main.go</code>.</p>
+
+<footer class="end">
+  <p>The one thing the diagrams cannot show: the processor is a separate Go module, so building it
+  into a Collector distribution does not drag the CLI's dependencies along with it. The core has no
+  dependencies at all.</p>
+  <p><a href="/2026/09/17/three-places-to-put-a-translator/">The post this page belongs to</a>
+  &#160;&#183;&#160; <a href="https://github.com/Grace/genai-interlingua">Source</a></p>
+</footer>
+
+</body>
+</html>
